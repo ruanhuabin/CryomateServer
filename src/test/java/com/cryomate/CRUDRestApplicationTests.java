@@ -79,20 +79,7 @@ public class CRUDRestApplicationTests {
 	}
 	
 	
-	@Test
-	public void testCreateKeyword() {
-		SystemKeyword keyword = new SystemKeyword();
-		keyword.setID("def");
-		keyword.setKeyword("Cs");
-		keyword.setDataType("float");
-		keyword.setDefaultValue("2.7");
-		keyword.setDescription("Spherical aberration coefficient of objective lens in mm");		
-
-		ResponseEntity<SystemKeyword> postResponse = restTemplate.postForEntity(getRootUrl() + "/keyword", keyword, SystemKeyword.class);
-		assertNotNull(postResponse);
-		assertNotNull(postResponse.getBody());
-		System.out.println("==============>Body: " + postResponse.getBody().getDescription());
-	}
+	
 	
 	
 

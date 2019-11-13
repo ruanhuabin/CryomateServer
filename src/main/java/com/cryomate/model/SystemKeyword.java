@@ -57,7 +57,7 @@ public class SystemKeyword {
 		this.defaultValue = defaultValue;
 	}
 	
-	@Column(name = "description", nullable = false)
+	@Column(name = "description", nullable = true)
 	public String getDescription() {
 		return description;
 	}
@@ -65,25 +65,25 @@ public class SystemKeyword {
 		this.description = description;
 	}
 	
-//	public SystemKeyword()
-//	{
-//		
-//	}
-//	
-//	public SystemKeyword(String iD, String keyword, String dataType, String defaultValue, String description) {
-//		
-//		ID = iD;
-//		this.keyword = keyword;
-//		this.dataType = dataType;
-//		this.defaultValue = defaultValue;
-//		this.description = description;
-//	}
-//	@Override
-//	public String toString() {
-//		return "SystemKeywords [ID=" + ID + ", keyword=" + keyword + ", dataType=" + dataType + ", defaultValue="
-//				+ defaultValue + ", description=" + description + "]";
-//	}
-//	
+	public SystemKeyword()
+	{
+		
+	}
+	
+	public SystemKeyword(String iD, String keyword, String dataType, String defaultValue, String description) {
+		
+		ID = iD;
+		this.keyword = keyword;
+		this.dataType = dataType;
+		this.defaultValue = defaultValue;
+		this.description = description;
+	}
+	@Override
+	public String toString() {
+		return "SystemKeywords [ID=" + ID + ", keyword=" + keyword + ", dataType=" + dataType + ", defaultValue="
+				+ defaultValue + ", description=" + description + "]";
+	}
+	
 	
 
 }
