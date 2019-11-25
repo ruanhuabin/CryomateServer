@@ -21,11 +21,12 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 public class Job2DClassificationController {
 	
 	@RequestMapping("/download")
+	@ResponseBody
 	//public String downloadFile(org.apache.catalina.servlet4preview.http.HttpServletRequest request,
 	public String downloadFile(HttpServletRequest request,	HttpServletResponse response) {
 		String fileNameToDownload = request.getParameter("filename");		
 		System.out.println("===>file name: " + fileNameToDownload);
-		String fileName = "tmp.txt";
+		String fileName = "vs_community.exe";
 		if (fileName != null) {
 			String realPath = "E://";
 			File file = new File(realPath, fileName);
@@ -44,7 +45,7 @@ public class Job2DClassificationController {
 						os.write(buffer, 0, i);
 						i = bis.read(buffer);
 					}
-					System.out.println("success");
+					//System.out.println("success");
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {
@@ -65,7 +66,7 @@ public class Job2DClassificationController {
 				}
 			}
 		}
-		return null;
+		return "This message is return by download function";
 	}
 	
 	@RequestMapping("/upload")
