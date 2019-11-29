@@ -1,0 +1,9 @@
+-------------------------------------------------------------------------------
+Test set: com.cryomate.SystemKeywordTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.005 s <<< FAILURE! - in com.cryomate.SystemKeywordTests
+testCreateKeyword(com.cryomate.SystemKeywordTests)  Time elapsed: 0 s  <<< ERROR!
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'com.cryomate.SystemKeywordTests': Unsatisfied dependency expressed through field 'port'; nested exception is org.springframework.beans.TypeMismatchException: Failed to convert value of type 'java.lang.String' to required type 'int'; nested exception is java.lang.NumberFormatException: For input string: "${local.server.port}"
+Caused by: org.springframework.beans.TypeMismatchException: Failed to convert value of type 'java.lang.String' to required type 'int'; nested exception is java.lang.NumberFormatException: For input string: "${local.server.port}"
+Caused by: java.lang.NumberFormatException: For input string: "${local.server.port}"
+
