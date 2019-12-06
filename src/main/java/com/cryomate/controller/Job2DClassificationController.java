@@ -167,7 +167,7 @@ public class Job2DClassificationController
 	{
 		String fileNameToDownload = request.getParameter("filename");
 		System.out.println("===>file name: " + fileNameToDownload);
-		String fileName = "Office_Professional_Plus_2016_64Bit_ChnSimp_its.ISO";
+		String fileName = "201814gbgs.pdf";
 		if (fileName != null)
 		{
 			String realPath = "E://Software//";
