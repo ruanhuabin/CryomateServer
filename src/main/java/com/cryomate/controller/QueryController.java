@@ -19,10 +19,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 @Controller
-@RequestMapping("/api")
+@RequestMapping("/")
 public class QueryController
 {
-      @RequestMapping("/cSys_Command")
+      @RequestMapping("/api2/cSys_Command")
       @ResponseBody
       public String executeSystemCommand(HttpServletRequest request, HttpServletResponse response)
       {
@@ -54,7 +54,7 @@ public class QueryController
             {
                  // String[] command = { command};
                   // 执行命令, 返回一个子进程对象（命令在子进程中执行）
-                  process = Runtime.getRuntime().exec(command, null, new File("E://"));
+                  process = Runtime.getRuntime().exec(command, null, new File("./"));
                   // 方法阻塞, 等待命令执行完成（成功会返回0）
                   process.waitFor();
                   // 获取命令执行结果, 有两个结果: 正常的输出 和 错误的输出（PS: 子进程的输出就是主进程的输入）
@@ -172,7 +172,7 @@ public class QueryController
             return file;
       }
 
-      @RequestMapping("/cDisp_2DClass")
+      @RequestMapping("/api/cDisp_2DClass")
       @ResponseBody
       public String get2DClass(HttpServletRequest request, HttpServletResponse response)
       {

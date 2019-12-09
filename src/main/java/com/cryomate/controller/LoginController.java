@@ -10,17 +10,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 @Controller
-@RequestMapping(value = "/api/user")
+@RequestMapping(value = "/user")
 public class LoginController {
 
-    @GetMapping(value = "/test01")
+    @RequestMapping(value = "/test01")
+    @ResponseBody
     public String test01() {
         String info = "测试01";
         System.out.println(info);
         return info;
     }
 
-    @GetMapping(value = "/test02")
+    @RequestMapping(value = "/test02")
+    @ResponseBody
     public String test02() {
         String info = "test02";
         System.out.println(info);
@@ -36,9 +38,7 @@ public class LoginController {
      */
     @RequestMapping(value = "/login")
     @ResponseBody
-    public String login(
-            HttpServletRequest request
-    ) {
+    public String login(HttpServletRequest request) {
 	
 	String name = request.getParameter("name");
 	String pwd = request.getParameter("pwd");
@@ -62,7 +62,8 @@ public class LoginController {
      * @param request
      * @return
      */
-    @GetMapping(value = "/loginout")
+    @RequestMapping(value = "/logout")
+    @ResponseBody
     public String loginout(HttpServletRequest request) {
         String info = "登出操作";
         System.out.println(info);
