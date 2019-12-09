@@ -32,7 +32,7 @@ public class QueryController
             if(cmdString != null && cmdString != "")
             {
                   
-                  command = cmdString.strip().split(" ");
+                  command = cmdString.split(" ");
             }
             else
             {
