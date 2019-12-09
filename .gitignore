@@ -2,3 +2,5 @@
 warehouse
 *.swp
 target/
+*.jar
+*.lst
