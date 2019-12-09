@@ -1,5 +1,4 @@
 *.class
 warehouse
 *.swp
-target/*
-target/classes/com/cryomate/Application.class
+target/
