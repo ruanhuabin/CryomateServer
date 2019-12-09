@@ -1,6 +1,5 @@
 a.txt
 *.class
-warehouse
 *.swp
 target/
 *.jar
