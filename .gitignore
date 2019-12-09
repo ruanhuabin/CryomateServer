@@ -1,4 +1,5 @@
 *.class
+warehouse
 *.swp
 target/
 *.jar
