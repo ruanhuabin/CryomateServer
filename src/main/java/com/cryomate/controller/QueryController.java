@@ -1,5 +1,7 @@
 package com.cryomate.controller;
 
+import org.apache.tomcat.jni.OS;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -18,228 +20,245 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import com.cryomate.model.Job2DClassification;
+import com.cryomate.repository.Job2DClassificationRepository;
+
 @Controller
 @RequestMapping("/")
-public class QueryController
-{
-      @RequestMapping("/api2/cSys_Command")
-      @ResponseBody
-      public String executeSystemCommand(HttpServletRequest request, HttpServletResponse response)
-      {
-            String cmdString = request.getParameter("pParaString");
-            String command[];
-            
-            if(cmdString != null && cmdString != "")
-            {
-                  
-                  command = cmdString.split(" ");
-            }
-            else
-            {
-                  return "pParaString is not valid";
-            }
-            
-            System.out.print("command = " );
-            for(String cmd: command)
-            {
-                  System.out.print(cmd + " ");      
-            }
-            System.out.println();
-            
-            StringBuilder result = new StringBuilder();
-            Process process = null;
-            BufferedReader bufrIn = null;
-            BufferedReader bufrError = null;
-            try
-            {
-                 // String[] command = { command};
-                  // 执行命令, 返回一个子进程对象（命令在子进程中执行）
-                  process = Runtime.getRuntime().exec(command, null, new File("./"));
-                  // 方法阻塞, 等待命令执行完成（成功会返回0）
-                  process.waitFor();
-                  // 获取命令执行结果, 有两个结果: 正常的输出 和 错误的输出（PS: 子进程的输出就是主进程的输入）
-                  bufrIn = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
-                  bufrError = new BufferedReader(new InputStreamReader(process.getErrorStream(), "UTF-8"));
-                  // 读取输出
-                  String line;
-                  while ((line = bufrIn.readLine()) != null)
-                  {
-                        result.append(line).append('\n');
-                  }
-                  while ((line = bufrError.readLine()) != null)
-                  {
-                        // System.out.println("error message add: " + line + "\n");
-                        result.append(line).append('\n');
-                  }
-            }
-            catch (Exception e)
-            {
-                 e.printStackTrace();   
-                 System.out.println("====================>execute failed1");
-                  return "command executes failed";
-            }
-            finally
-            {
-                  try
-                  {
-                        bufrIn.close();
-                        bufrError.close();
-                  }
-                  catch (IOException e)
-                  {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                        System.out.println("====================>execute failed2");
-                        return "command executes failed";
-                  }
+public class QueryController {
+	@Autowired
+	private Job2DClassificationRepository job2DRepository;
 
-                  // 销毁子进程
-                  if (process != null)
-                  {
-                        process.destroy();
-                  }
+	@RequestMapping("/api2/cSys_Command")
+	@ResponseBody
+	public String executeSystemCommand(HttpServletRequest request, HttpServletResponse response) {
+		String cmdString = request.getParameter("pParaString");
+		String command[];
 
-            }
-            
-            return result.toString();
-      }
+		if (cmdString != null && cmdString != "") {
 
-      private File gen2DClassTarFile(String outputTarFileName)
-      {
-            String filePath = "./warehouse/";
-            // String fileName = "2DClass.tar";
-            File file = new File(filePath, outputTarFileName);
+			command = cmdString.split(" ");
+		} else {
+			return "pParaString is not valid";
+		}
 
-            if (!file.getParentFile().exists())
-            {
-                  file.getParentFile().mkdirs();
-            }
-            System.out.println("File full path = " + file.getAbsolutePath());
+		System.out.print("command = ");
+		for (String cmd : command) {
+			System.out.print(cmd + " ");
+		}
+		System.out.println();
 
-            StringBuilder result = new StringBuilder();
-            Process process = null;
-            BufferedReader bufrIn = null;
-            BufferedReader bufrError = null;
-            try
-            {
-                  String[] command = { "tar", "cvf", outputTarFileName, "2DClass" };
-                  // 执行命令, 返回一个子进程对象（命令在子进程中执行）
-                  process = Runtime.getRuntime().exec(command, null, new File(file.getParentFile().getAbsolutePath()));
-                  // 方法阻塞, 等待命令执行完成（成功会返回0）
-                  process.waitFor();
-                  // 获取命令执行结果, 有两个结果: 正常的输出 和 错误的输出（PS: 子进程的输出就是主进程的输入）
-                  bufrIn = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
-                  bufrError = new BufferedReader(new InputStreamReader(process.getErrorStream(), "UTF-8"));
-                  // 读取输出
-                  String line;
-                  while ((line = bufrIn.readLine()) != null)
-                  {
-                        result.append(line).append('\n');
-                  }
-                  while ((line = bufrError.readLine()) != null)
-                  {
-                        // System.out.println("error message add: " + line + "\n");
-                        result.append(line).append('\n');
-                  }
-            }
-            catch (Exception e)
-            {
-                  e.printStackTrace();
-            }
-            finally
-            {
-                  try
-                  {
-                        bufrIn.close();
-                        bufrError.close();
-                  }
-                  catch (IOException e)
-                  {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                  }
+		StringBuilder result = new StringBuilder();
+		Process process = null;
+		BufferedReader bufrIn = null;
+		BufferedReader bufrError = null;
+		try {
+			// String[] command = { command};
+			// 执行命令, 返回一个子进程对象（命令在子进程中执行）
+			process = Runtime.getRuntime().exec(command, null, new File("./"));
+			// 方法阻塞, 等待命令执行完成（成功会返回0）
+			process.waitFor();
+			// 获取命令执行结果, 有两个结果: 正常的输出 和 错误的输出（PS: 子进程的输出就是主进程的输入）
+			bufrIn = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
+			bufrError = new BufferedReader(new InputStreamReader(process.getErrorStream(), "UTF-8"));
+			// 读取输出
+			String line;
+			while ((line = bufrIn.readLine()) != null) {
+				result.append(line).append('\n');
+			}
+			while ((line = bufrError.readLine()) != null) {
+				// System.out.println("error message add: " + line + "\n");
+				result.append(line).append('\n');
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("====================>execute failed1");
+			return "command executes failed";
+		} finally {
+			try {
+				bufrIn.close();
+				bufrError.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				System.out.println("====================>execute failed2");
+				return "command executes failed";
+			}
 
-                  // 销毁子进程
-                  if (process != null)
-                  {
-                        process.destroy();
-                  }
+			// 销毁子进程
+			if (process != null) {
+				process.destroy();
+			}
 
-            }
+		}
 
-            // System.out.println("result is: " + result);
+		return result.toString();
+	}
 
-            return file;
-      }
+	private File gen2DClassTarFile(String outputTarFileName) {
+		String filePath = "./warehouse/";
+		// String fileName = "2DClass.tar";
+		File file = new File(filePath, outputTarFileName);
 
-      @RequestMapping("/api/cDisp_2DClass")
-      @ResponseBody
-      public String get2DClass(HttpServletRequest request, HttpServletResponse response)
-      {
-            String pParaString = request.getParameter("pParaString");
-            String pID = request.getParameter("pID");
-            String pRound = request.getParameter("pRound");
-            String sNormalized = request.getParameter("sNormalized");
-            String pSTD = request.getParameter("pSTD");
-            String sRaw = request.getParameter("sRaw");
+		if (!file.getParentFile().exists()) {
+			file.getParentFile().mkdirs();
+		}
+		System.out.println("File full path = " + file.getAbsolutePath());
 
-            String outputTarFileName = "2DClass.tar";
-            File file = gen2DClassTarFile(outputTarFileName);
+		StringBuilder result = new StringBuilder();
+		Process process = null;
+		BufferedReader bufrIn = null;
+		BufferedReader bufrError = null;
+		try {
+			String[] command = { "tar", "cvf", outputTarFileName, "2DClass" };
+			// 执行命令, 返回一个子进程对象（命令在子进程中执行）
+			process = Runtime.getRuntime().exec(command, null, new File(file.getParentFile().getAbsolutePath()));
+			// 方法阻塞, 等待命令执行完成（成功会返回0）
+			process.waitFor();
+			// 获取命令执行结果, 有两个结果: 正常的输出 和 错误的输出（PS: 子进程的输出就是主进程的输入）
+			bufrIn = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
+			bufrError = new BufferedReader(new InputStreamReader(process.getErrorStream(), "UTF-8"));
+			// 读取输出
+			String line;
+			while ((line = bufrIn.readLine()) != null) {
+				result.append(line).append('\n');
+			}
+			while ((line = bufrError.readLine()) != null) {
+				// System.out.println("error message add: " + line + "\n");
+				result.append(line).append('\n');
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				bufrIn.close();
+				bufrError.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
-            String fileNameToDownload = request.getParameter("filename");
-            // System.out.println("===>file name: " + fileNameToDownload);
+			// 销毁子进程
+			if (process != null) {
+				process.destroy();
+			}
 
-            if (file.exists())
-            {
-                  response.setContentType("application/force-download");// 设置强制下载不打开
-                  response.addHeader("Content-Disposition", "attachment;fileName=" + outputTarFileName);// 设置文件名
-                  byte[] buffer = new byte[1024];
-                  FileInputStream fis = null;
-                  BufferedInputStream bis = null;
-                  try
-                  {
-                        fis = new FileInputStream(file);
-                        bis = new BufferedInputStream(fis);
-                        OutputStream os = response.getOutputStream();
-                        int i = bis.read(buffer);
-                        while (i != -1)
-                        {
-                              os.write(buffer, 0, i);
-                              i = bis.read(buffer);
-                        }
-                  }
-                  catch (Exception e)
-                  {
-                        e.printStackTrace();
-                  }
-                  finally
-                  {
-                        if (bis != null)
-                        {
-                              try
-                              {
-                                    bis.close();
-                              }
-                              catch (IOException e)
-                              {
-                                    e.printStackTrace();
-                              }
-                        }
-                        if (fis != null)
-                        {
-                              try
-                              {
-                                    fis.close();
-                              }
-                              catch (IOException e)
-                              {
-                                    e.printStackTrace();
-                              }
-                        }
-                  }
-            }
+		}
 
-            return "data send success";
-      }
+		// System.out.println("result is: " + result);
+
+		return file;
+	}
+
+	@RequestMapping("/api/v2/cDisp_2DClass")
+	@ResponseBody
+	public String cDisp2DClass(HttpServletRequest request, HttpServletResponse response) {
+		String pID = request.getParameter("pID");
+		String pRound = request.getParameter("pRound");
+		String sNormalized = request.getParameter("sNormalized");
+		String pSTD = request.getParameter("pSTD");
+		String sRaw = request.getParameter("sRaw");
+
+		System.out.printf("pID = %s, pRound = %s, sNormalized = %s, sRaw = %s\n", pID, pRound, sNormalized, pSTD, sRaw);
+
+		if (pID == "" || pID == null) {
+			return "Error: pID is empty";
+		}
+
+		if (pRound == "" || pRound == null) {
+			pRound = "Final";
+		}
+
+		String mrcsFileName = "Reference_Round_" + pRound + ".mrcs";
+		System.out.printf("2D Class file name: %s\n", mrcsFileName);
+		
+		Job2DClassification job2dClassification = job2DRepository.getOne(pID);
+		
+		String scriptName = job2dClassification.getProgramName();
+		String taskOutputPath = job2dClassification.getTaskOutputPath();
+		String mrcsFileFullName = taskOutputPath + File.separator + mrcsFileName;
+		
+		System.out.println("program name = " + job2dClassification.getProgramName());
+		System.out.println("mrcs file full name " + mrcsFileFullName);
+		
+		String cmdToRun = scriptName + " --input " + mrcsFileFullName;
+		
+		if(pSTD != null && pSTD != "")
+		{
+			cmdToRun = cmdToRun + " --pSTD " + pSTD;
+		}
+		
+		if(sNormalized != null && sNormalized != "")
+		{
+			cmdToRun = cmdToRun + " --sNormalized" + sNormalized;
+		}
+		
+		if(sRaw != null && sRaw != "")
+		{
+			cmdToRun = cmdToRun + " --sRaw " + sRaw;
+		}
+		
+		
+		System.out.println("command to run: " + cmdToRun);
+		
+		
+		
+
+		return null;
+	}
+
+	@RequestMapping("/api/cDisp_2DClass")
+	@ResponseBody
+	public String get2DClass(HttpServletRequest request, HttpServletResponse response) {
+		String pParaString = request.getParameter("pParaString");
+		String pID = request.getParameter("pID");
+		String pRound = request.getParameter("pRound");
+		String sNormalized = request.getParameter("sNormalized");
+		String pSTD = request.getParameter("pSTD");
+		String sRaw = request.getParameter("sRaw");
+
+		String outputTarFileName = "2DClass.tar";
+		File file = gen2DClassTarFile(outputTarFileName);
+
+		String fileNameToDownload = request.getParameter("filename");
+		// System.out.println("===>file name: " + fileNameToDownload);
+
+		if (file.exists()) {
+			response.setContentType("application/force-download");// 设置强制下载不打开
+			response.addHeader("Content-Disposition", "attachment;fileName=" + outputTarFileName);// 设置文件名
+			byte[] buffer = new byte[1024];
+			FileInputStream fis = null;
+			BufferedInputStream bis = null;
+			try {
+				fis = new FileInputStream(file);
+				bis = new BufferedInputStream(fis);
+				OutputStream os = response.getOutputStream();
+				int i = bis.read(buffer);
+				while (i != -1) {
+					os.write(buffer, 0, i);
+					i = bis.read(buffer);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				if (bis != null) {
+					try {
+						bis.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				if (fis != null) {
+					try {
+						fis.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+
+		return "data send success";
+	}
 
 }

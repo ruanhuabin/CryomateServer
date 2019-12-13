@@ -19,6 +19,7 @@ public class Job2DClassification {
 	private String processQuality;
 	private String description;
 	
+	
 	@Id
 	public String getID() {
 		return ID;
