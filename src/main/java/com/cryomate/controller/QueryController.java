@@ -1,6 +1,7 @@
 package com.cryomate.controller;
 
 import org.apache.tomcat.jni.OS;
+import org.aspectj.weaver.ast.Var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import java.io.BufferedInputStream;
@@ -10,6 +11,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,14 +25,20 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+
 import com.cryomate.model.Job2DClassification;
+import com.cryomate.model.User;
 import com.cryomate.repository.Job2DClassificationRepository;
+import com.cryomate.utils.JDBCUtils;
 
 @Controller
 @RequestMapping("/")
 public class QueryController {
 	@Autowired
 	private Job2DClassificationRepository job2DRepository;
+	
+//	@Autowired
+//	private DemoDaoImpl dao;
 
 	@RequestMapping("/api2/cSys_Command")
 	@ResponseBody
@@ -48,7 +59,7 @@ public class QueryController {
 		}
 		System.out.println();
 
-		StringBuilder result = new StringBuilder();
+		StringBuffer result = new StringBuffer();
 		Process process = null;
 		BufferedReader bufrIn = null;
 		BufferedReader bufrError = null;
@@ -96,6 +107,15 @@ public class QueryController {
 	}
 
 	private File gen2DClassTarFile(String outputTarFileName) {
+		
+//		List<Job2DClassification> result2 = dao.selectBySql("select * from job2D_classification");
+//		
+//		for(Job2DClassification job2d: result2)
+//		{
+//			System.out.println(job2d);
+//		}
+		
+		
 		String filePath = "./warehouse/";
 		// String fileName = "2DClass.tar";
 		File file = new File(filePath, outputTarFileName);
@@ -105,7 +125,7 @@ public class QueryController {
 		}
 		System.out.println("File full path = " + file.getAbsolutePath());
 
-		StringBuilder result = new StringBuilder();
+		StringBuffer result = new StringBuffer();
 		Process process = null;
 		BufferedReader bufrIn = null;
 		BufferedReader bufrError = null;
@@ -259,6 +279,43 @@ public class QueryController {
 		}
 
 		return "data send success";
+	}
+	
+	@RequestMapping("/api/execSQL")
+	@ResponseBody
+	public String execSQL(HttpServletRequest request, HttpServletResponse response)
+	{
+		User employee = null;
+        List<User> list = new ArrayList();
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet result = null;
+        String sql = "select * from users";
+        try {
+            //创建连接
+            conn = JDBCUtils.getConnetions();
+            //创建prepareStatement对象，用于执行SQL
+            ps = conn.prepareStatement(sql);
+            //获取查询结果集
+            result = ps.executeQuery();
+            while(result.next()){
+                //employee = new User(result.getInt(1),result.getString(2),result.getString(3));
+            	employee = new User();
+            	employee.setId(result.getInt(1));
+            	employee.setFirstName(result.getString(2));
+            	employee.setLastName(result.getString(3));
+                list.add(employee);
+                
+                System.out.printf("user id = %d, firstname = %s, lastname = %s\n", employee.getId(), employee.getFirstName(), employee.getLastName());
+            }
+            System.out.println("list = " + list);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally{
+            JDBCUtils.release(result, ps, conn);
+        }
+		
+		return null;
 	}
 
 }
