@@ -2,5 +2,4 @@ a.txt
 *.class
 *.swp
 target/
-*.jar
 *.lst
