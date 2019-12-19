@@ -443,7 +443,7 @@ public class QueryController {
 	public String getTableColumns(HttpServletRequest request, HttpServletResponse response) 
 	{		
 		String tableName = request.getParameter("pDBTable");
-		if(tableName == null || tableName=="")
+		if(tableName == null || tableName == "")
 		{
 			return "Error: Table name is not specified by key pDBTable";
 		}
