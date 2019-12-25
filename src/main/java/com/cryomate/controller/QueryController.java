@@ -39,7 +39,8 @@ public class QueryController {
 //	@Autowired
 //	private DemoDaoImpl dao;
 
-	@RequestMapping("/api2/cSys_Command")
+	//@RequestMapping("/api2/cSys_Command")
+	@RequestMapping("/api/cSys_Command")
 	@ResponseBody
 	public String executeSystemCommand(HttpServletRequest request, HttpServletResponse response) {
 		String cmdString = request.getParameter("pParaString");

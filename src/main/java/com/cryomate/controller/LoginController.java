@@ -48,9 +48,9 @@ public class LoginController {
         // 登录认证，认证成功后将用户信息放到session中
         if (name.equals("fury") && pwd.equals("111111")) {
             request.getSession().setAttribute("userInfo", name + " - " + pwd);
-            info = "登录成功";
+            info = "login success";
         } else {
-            info = "登录失败";
+            info = "login failed";
         }
 
         System.out.println(info + ", Request Method = " + request.getMethod());
@@ -74,9 +74,9 @@ public class LoginController {
 
         Object userInfo = session.getAttribute("userInfo");
         if (userInfo == null) {
-            info = "登出成功";
+            info = "logout success";
         } else {
-            info = "登出失败";
+            info = "logout failed";
         }
         System.out.println(info);
 
