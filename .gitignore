@@ -3,3 +3,4 @@ a.txt
 *.swp
 target
 *.lst
+warehouse/imageDir
