@@ -1,0 +1,4 @@
+sReal32
+pDimX=256
+pDimY=256
+pDimZ=1

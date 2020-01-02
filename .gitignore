@@ -1,5 +1,6 @@
 a.txt
 *.class
 *.swp
-target/
+target
 *.lst
+warehouse/imageDir
