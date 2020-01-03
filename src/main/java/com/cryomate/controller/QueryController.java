@@ -32,6 +32,7 @@ import com.cryomate.model.Job2DClassification;
 import com.cryomate.model.User;
 import com.cryomate.repository.Job2DClassificationRepository;
 import com.cryomate.utils.JDBCUtils;
+import com.cryomate.utils.KeyGenerator;
 
 @Controller
 @RequestMapping("/")
@@ -781,5 +782,16 @@ public class QueryController {
 		}
 		return result.toString();		
 	}
+
+
+	@RequestMapping("/api/cGen_ID")
+	@ResponseBody
+	public String genID(HttpServletRequest request, HttpServletResponse response) 
+    {
+        String ID = KeyGenerator.getNextID();
+
+        return ID;
+    }
+
 
 }
