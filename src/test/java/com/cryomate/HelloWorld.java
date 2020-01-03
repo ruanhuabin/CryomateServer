@@ -1,14 +1,14 @@
 package com.cryomate;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+//import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.logging.log4j.message.StringFormatterMessageFactory;
-import org.springframework.context.support.StaticApplicationContext;
+//import org.apache.logging.log4j.message.StringFormatterMessageFactory;
+//import org.springframework.context.support.StaticApplicationContext;
 
 public class HelloWorld {
 	
@@ -99,6 +99,38 @@ public class HelloWorld {
 		
 	}
 
+	public synchronized String getNextID2()
+	{
+        try
+        {
+            Thread.sleep(1);
+        }
+        catch(InterruptedException e)
+        { 
+            e.printStackTrace(); 
+        } 
+
+		StringBuffer nextID = new StringBuffer();
+		//int nextValue = loadNextValue();
+		//String strValue = Integer.toBinaryString(nextValue);
+        long nextValue = System.currentTimeMillis();
+        String strValue = Long.toBinaryString(nextValue);
+		List<String> valueList = splitStringFromEnd(strValue, 6);
+		for (String item: valueList)
+		{
+			int num = Integer.parseUnsignedInt(item, 2);
+			nextID.append(decTo64table[num]);
+			
+		}
+		
+		
+		String formatString = String.format("%8s", nextID.reverse().toString());
+		
+		String finalString = formatString.replace(' ', '0');
+		return finalString;
+		
+	}
+
 	public static void main(String[] args) 
 	{
 		// TODO Auto-generated method stub
@@ -117,14 +149,14 @@ public class HelloWorld {
 			
 		}
 		
-		long time = System.currentTimeMillis();
-		String aaString = Long.toBinaryString(time);
-		System.out.println(aaString);
+		//long time = System.currentTimeMillis();
+		//String aaString = Long.toBinaryString(time);
+		//System.out.println(aaString);
 			
-//		for (int i = 0; i < 100; i++) 
-//		{
-//			System.out.println(hwWorld.getNextID());			
-//		}
+        for (int i = 0; i < 100; i++) 
+        {
+            System.out.println(hwWorld.getNextID2());			
+        }
 	}
 
 }
