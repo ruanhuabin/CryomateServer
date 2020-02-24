@@ -1,105 +1,113 @@
 package com.cryomate.model;
 
-import java.util.Date;
-
-import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import javax.persistence.NamedQuery;
 
 @Entity
-@Table(name = "users")
-@EntityListeners(AuditingEntityListener.class)
+@NamedQuery(name="User.withNameAndPasswordNamedQuery", query="select u from User u where u.name=?1 and u.password=?2")
+@NamedQuery(name="User.withNameAndWorkGroupNamedQuery", query="select u from User u where u.name=?1 and u.workGroup=?2")
 public class User {
+	
+	private String name;
+	private String password;
+	private String email;
+	private String workGroup;
+	private String role;
+	private String homeDir;
+	
 
-	private int id;
-	private String firstName;
-	private String lastName;
-	private String emailId;
-	private Date createdAt;
-	private String createdBy;
-	private Date updatedAt;
-	private String updatedby;
-	
+	public User() {
+		super();
+	}
+
+	public User( String name, String password, String email, String workGroup, String role, String homeDir) {
+		super();		
+		this.name = name;
+		this.password = password;
+		this.email = email;
+		this.workGroup = workGroup;
+		this.role = role;
+		this.homeDir = homeDir;
+	}
+
+//	@Id
+//	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+//	public int getId() {
+//		return id;
+//	}
+//
+//	public void setId(int id) {
+//		this.id = id;
+//	}
+
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	public int getId() {
-		return id;
+	public String getName() {
+		return name;
 	}
-	public void setId(int id) {
-		this.id = id;
+
+	public void setName(String name) {
+		this.name = name;
 	}
-	
-	@Column(name = "first_name", nullable = false)
-	public String getFirstName() {
-		return firstName;
+
+	public String getPassword() {
+		return password;
 	}
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
-	
-	@Column(name = "last_name", nullable = false)
-	public String getLastName() {
-		return lastName;
+
+	public String getEmail() {
+		return email;
 	}
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
-	
-	@Column(name = "email_address", nullable = false)
-	public String getEmailId() {
-		return emailId;
+
+	public String getWorkGroup() {
+		return workGroup;
 	}
-	public void setEmailId(String emailId) {
-		this.emailId = emailId;
+
+	public void setWorkGroup(String workGroup) {
+		this.workGroup = workGroup;
 	}
-	
-	@Column(name = "created_at", nullable = false)
-	@CreatedDate
-	@Temporal(TemporalType.TIMESTAMP)
-	public Date getCreatedAt() {
-		return createdAt;
+
+	public String getRole() {
+		return role;
 	}
-	public void setCreatedAt(Date createdAt) {
-		this.createdAt = createdAt;
+
+	public void setRole(String role) {
+		this.role = role;
 	}
 	
-	@Column(name = "created_by", nullable = false)
-	@CreatedBy
-	public String getCreatedBy() {
-		return createdBy;
-	}
-	public void setCreatedBy(String createdBy) {
-		this.createdBy = createdBy;
-	}
 	
-	@Column(name = "updated_at", nullable = false)
-	@LastModifiedDate
-	@Temporal(TemporalType.TIMESTAMP)
-	public Date getUpdatedAt() {
-		return updatedAt;
+
+	public String getHomeDir() {
+		return homeDir;
 	}
-	public void setUpdatedAt(Date updatedAt) {
-		this.updatedAt = updatedAt;
+
+	public void setHomeDir(String homeDir) {
+		this.homeDir = homeDir;
 	}
+
 	
-	@Column(name = "updated_by", nullable = false)
-	@LastModifiedBy
-	public String getUpdatedby() {
-		return updatedby;
+	@Override
+	public String toString() {
+		return "User [name=" + name + ", password=" + password + ", email=" + email + ", workGroup=" + workGroup
+				+ ", role=" + role + ", homeDir=" + homeDir + "]";
 	}
-	public void setUpdatedby(String updatedby) {
-		this.updatedby = updatedby;
-	}
+
+	
+
+	
+
+	
+	
+	
+
+	
 }

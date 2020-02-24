@@ -29,7 +29,7 @@ import java.util.UUID;
 import com.fasterxml.uuid.Generators;
 
 import com.cryomate.model.Job2DClassification;
-import com.cryomate.model.User;
+import com.cryomate.model.UserExample;
 import com.cryomate.repository.Job2DClassificationRepository;
 import com.cryomate.utils.JDBCUtils;
 import com.cryomate.utils.KeyGenerator;
@@ -554,8 +554,8 @@ public class QueryController {
 	@RequestMapping("/api/execSQL")
 	@ResponseBody
 	public String execSQL(HttpServletRequest request, HttpServletResponse response) {
-		User employee = null;
-		List<User> list = new ArrayList();
+		UserExample employee = null;
+		List<UserExample> list = new ArrayList();
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet result = null;
@@ -570,7 +570,7 @@ public class QueryController {
 			while (result.next()) {
 				// employee = new
 				// User(result.getInt(1),result.getString(2),result.getString(3));
-				employee = new User();
+				employee = new UserExample();
 				employee.setId(result.getInt(1));
 				employee.setFirstName(result.getString(2));
 				employee.setLastName(result.getString(3));

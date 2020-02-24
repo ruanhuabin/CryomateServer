@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cryomate.exception.ResourceNotFoundException;
 import com.cryomate.model.EMBasic;
-import com.cryomate.model.User;
+import com.cryomate.model.UserExample;
 import com.cryomate.repository.EMBasicRepository;
 import com.cryomate.repository.UserRepository;
 

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
 
-import com.cryomate.model.User;
+import com.cryomate.model.UserExample;
 import com.cryomate.utils.JDBCUtils;
 
 
@@ -16,20 +16,22 @@ public class JDBCTest {
     @Test
     public void testUpdate(){
         //曾
-        String sql = "insert into user (id,first_name, last_name) values (1,'wangba','131')";
+        String sql = "insert into users (id,first_name, last_name) values (1,'wangba','131')";
         //删
         //String sql = "delete from employee where id = 1";
         //改
         //String sql = "update employee set name = 'fuck' where id = 2";
         //查
-        String sqlQuery = "select * from user";
+        String sqlQuery = "select * from users";
         update(sql);
         testQueryObject(sqlQuery);
+        
+        
     }
     
     public void testQueryObject(String sql){
-        User employee = null;
-        List<User> list = new ArrayList();
+        UserExample employee = null;
+        List<UserExample> list = new ArrayList();
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet result = null;
@@ -42,7 +44,7 @@ public class JDBCTest {
             result = ps.executeQuery();
             while(result.next()){
                 //employee = new User(result.getInt(1),result.getString(2),result.getString(3));
-            	employee = new User();
+            	employee = new UserExample();
             	employee.setId(result.getInt(1));
             	employee.setFirstName(result.getString(2));
             	employee.setLastName(result.getString(3));

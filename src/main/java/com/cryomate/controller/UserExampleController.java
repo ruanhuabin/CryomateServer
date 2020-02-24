@@ -19,56 +19,57 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cryomate.exception.ResourceNotFoundException;
-import com.cryomate.model.User;
-import com.cryomate.repository.UserRepository;
+import com.cryomate.model.UserExample;
+import com.cryomate.repository.UserExampleRepository;
+
 
 
 
 @RestController
 @RequestMapping("/api/v1")
-public class UserController {
+public class UserExampleController {
 	
 	@Autowired
-	private UserRepository userRepository;
+	private UserExampleRepository userRepository;
 
 	
 	@GetMapping("/users")
-	public List<User> getAllUsers() {
+	public List<UserExample> getAllUsers() {
 		return userRepository.findAll();
 	}
 
 	@GetMapping("/users/{id}")
-	public ResponseEntity<User> getUserById(
+	public ResponseEntity<UserExample> getUserById(
 			@PathVariable(value = "id") Long userId) throws ResourceNotFoundException {
-		User user = userRepository.findById(userId)
+		UserExample user = userRepository.findById(userId)
         .orElseThrow(() -> new ResourceNotFoundException("User not found :: " + userId));
 		return ResponseEntity.ok().body(user);
 	}
 
 	@PostMapping("/users")
-	public User createUser(@Valid @RequestBody User user) {
+	public UserExample createUser(@Valid @RequestBody UserExample user) {
 		return userRepository.save(user);
 	}
 
 	@PutMapping("/users/{id}")
-	public ResponseEntity<User> updateUser(
+	public ResponseEntity<UserExample> updateUser(
 			@PathVariable(value = "id") Long userId,
-			@Valid @RequestBody User userDetails) throws ResourceNotFoundException {
-		User user = userRepository.findById(userId)
+			@Valid @RequestBody UserExample userDetails) throws ResourceNotFoundException {
+		UserExample user = userRepository.findById(userId)
 		        .orElseThrow(() -> new ResourceNotFoundException("User not found :: " + userId));
 		
 		user.setEmailId(userDetails.getEmailId());
 		user.setLastName(userDetails.getLastName());
 		user.setFirstName(userDetails.getFirstName());
 		user.setUpdatedAt(new Date());
-		final User updatedUser = userRepository.save(user);
+		final UserExample updatedUser = userRepository.save(user);
 		return ResponseEntity.ok(updatedUser);
 	}
 
 	@DeleteMapping("/users/{id}")
 	public Map<String, Boolean> deleteUser(
 			@PathVariable(value = "id") Long userId) throws ResourceNotFoundException {
-		User user = userRepository.findById(userId)
+		UserExample user = userRepository.findById(userId)
 		        .orElseThrow(() -> new ResourceNotFoundException("User not found :: " + userId));
 
 		userRepository.delete(user);
