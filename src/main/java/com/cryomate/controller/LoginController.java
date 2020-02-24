@@ -53,20 +53,36 @@ public class LoginController {
     public String login(HttpServletRequest request) {
 	
 	String name = request.getParameter("name");
-	String pwd = request.getParameter("pwd");
-        String info = "登录逻辑";
-        System.out.println(info);
+	String password = request.getParameter("pwd");
+    String info = "登录逻辑";
+    System.out.println(info);
+    
+    User user = userRepos.findByNameAndPassword(name, password);
+ // 登录认证，认证成功后将用户信息放到session中
+    if(user != null)
+    {
+    	request.getSession().setAttribute("userInfo", name + " - " + password);
+    	System.out.println("user [ " + name + " ] is valid");
+        info = "login success";
+    }
+    else
+    {
+    	info = "login failed";
+    }
+    
+    System.out.println(info + ", Request Method = " + request.getMethod());
+    return info;
 
-        // 登录认证，认证成功后将用户信息放到session中
-        if (name.equals("fury") && pwd.equals("111111")) {
-            request.getSession().setAttribute("userInfo", name + " - " + pwd);
-            info = "login success";
-        } else {
-            info = "login failed";
-        }
-
-        System.out.println(info + ", Request Method = " + request.getMethod());
-        return info;
+//        // 登录认证，认证成功后将用户信息放到session中
+//        if (name.equals("fury") && password.equals("111111")) {
+//            request.getSession().setAttribute("userInfo", name + " - " + password);
+//            info = "login success";
+//        } else {
+//            info = "login failed";
+//        }
+//
+//        System.out.println(info + ", Request Method = " + request.getMethod());
+//        return info;
     }
 
     /**
@@ -101,7 +117,7 @@ public class LoginController {
     public String register(HttpServletRequest request)
     {
     	String name = request.getParameter("name");
-    	String password = request.getParameter("password");
+    	String password = request.getParameter("pwd");
     	String email = request.getParameter("email");
     	String role = request.getParameter("role");
     	String workGroup = request.getParameter("workGroup");
