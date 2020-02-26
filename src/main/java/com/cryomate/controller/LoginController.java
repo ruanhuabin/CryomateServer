@@ -61,7 +61,8 @@ public class LoginController {
  // 登录认证，认证成功后将用户信息放到session中
     if(user != null)
     {
-    	request.getSession().setAttribute("userInfo", name + " - " + password);
+    	//request.getSession().setAttribute("userInfo", name + " - " + password);
+    	request.getSession().setAttribute("userInfo", "" + user.getRole());
     	System.out.println("user [ " + name + " ] is valid");
         info = "login success";
     }
@@ -138,7 +139,7 @@ public class LoginController {
     	if(user != null)
     	{
     		StringBuffer retMsg = new StringBuffer();
-    		retMsg.append("Register Failed：user name [ ");
+    		retMsg.append("Register Failed：user [ ");
     		retMsg.append(name);
     		retMsg.append(" ] is already exist");
     		System.out.println(retMsg.toString());
@@ -155,5 +156,41 @@ public class LoginController {
     			
     	return "register success";
     }
+    
+    @RequestMapping(value = "/remove")
+    @ResponseBody
+    public String remove(HttpServletRequest request)
+    {		
+    	String name = request.getParameter("name");
+    	
+    	if(name == null)
+    	{
+    		return "Error: user name is null";
+    	}
+    	
+    	User user = userRepos.getByName(name);
+    	if(user == null)
+    	{
+    		return "Error: user [ " + name + " ] is not exist";
+    	}
+    	
+    	System.out.println("User [ " + name + " ] is exist");  
+    	
+    	String currUserRole = (String)request.getSession().getAttribute("userInfo");
+    	
+    	if(currUserRole != null && currUserRole.equals("admin"))
+    	{
+    		User u = new User();
+        	u.setName(name);
+        	userRepos.delete(u);
+        	return "remove user success";
+    	}
+    	else
+    	{
+    		return "permission denied";
+    	}  	
+    	
+    }
+    
 
 }

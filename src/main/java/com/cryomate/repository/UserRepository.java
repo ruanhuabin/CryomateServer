@@ -10,9 +10,12 @@ import org.springframework.stereotype.Repository;
 import com.cryomate.model.User;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long>{
+public interface UserRepository extends JpaRepository<User, String>{
 	
 	User getByName(String name);
+	
+	void deleteByName(String name);
+	
 	
 	List<User> findByWorkGroup(String workGroup22);
 	

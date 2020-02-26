@@ -9,14 +9,14 @@ import javax.persistence.NamedQuery;
 @Entity
 @NamedQuery(name="User.withNameAndPasswordNamedQuery", query="select u from User u where u.name=?1 and u.password=?2")
 @NamedQuery(name="User.withNameAndWorkGroupNamedQuery", query="select u from User u where u.name=?1 and u.workGroup=?2")
-public class User {
-	
+public class User {	
 	private String name;
 	private String password;
 	private String email;
 	private String workGroup;
 	private String role;
-	private String homeDir;
+	private String homeDir;	
+	private String dataDir;	
 	
 
 	public User() {
@@ -95,16 +95,21 @@ public class User {
 	}
 
 	
+	public String getDataDir() {
+		return dataDir;
+	}
+
+	public void setDataDir(String dataDir) {
+		this.dataDir = dataDir;
+	}
+
 	@Override
 	public String toString() {
 		return "User [name=" + name + ", password=" + password + ", email=" + email + ", workGroup=" + workGroup
-				+ ", role=" + role + ", homeDir=" + homeDir + "]";
+				+ ", role=" + role + ", homeDir=" + homeDir + ", dataDir=" + dataDir + "]";
 	}
 
 	
-
-	
-
 	
 	
 	
