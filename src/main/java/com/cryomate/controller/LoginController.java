@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cryomate.model.User;
 import com.cryomate.repository.UserRepository;
+import com.cryomate.utils.CommandRunner;
 
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,10 @@ public class LoginController {
 	
 	@Value("${cryomate.user.homedir.prefix}")
 	private String userHomeDirPrefix;
+	@Value("${cryomate.user.datadir.prefix}")
+	private String dataDirPrefix;
+	@Value("${cryomate.user.workdir.prefix}")
+	private String workDirPrefix;
 	
 	@Autowired
 	UserRepository userRepos;
@@ -153,9 +158,31 @@ public class LoginController {
     	
     	//invoke script to create system user
     	
-    			
+    	if(workGroup == null || workGroup.equals(""))
+    	{
+    		workGroup = name;
+    	}
+    	
+    	String workDir = this.workDirPrefix + "/" + workGroup + "/" + name;
+    	String dataDir = this.dataDirPrefix + "/" + workGroup + "/" + name;
+    	
+    	String command[] = new String[7];
+    	command[0] = "./warehouse/script/register.sh";
+    	command[1] = workGroup;
+    	command[2] = name;
+    	command[3] = password;
+    	command[4] = this.userHomeDirPrefix;
+    	command[5] = workDir;
+    	command[6] = dataDir;
+    	
+    	String result = CommandRunner.runCommand(command);
+    	System.out.println(command[0] + "running result: " + result.toString());
+        	
     	return "register success";
     }
+    
+    
+    
     
     @RequestMapping(value = "/remove")
     @ResponseBody
