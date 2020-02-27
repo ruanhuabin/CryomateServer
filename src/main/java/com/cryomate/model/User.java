@@ -16,6 +16,7 @@ public class User {
 	private String workGroup;
 	private String role;
 	private String homeDir;	
+	private String workDir;
 	private String dataDir;	
 	
 
@@ -23,7 +24,7 @@ public class User {
 		super();
 	}
 
-	public User( String name, String password, String email, String workGroup, String role, String homeDir) {
+	public User( String name, String password, String email, String workGroup, String role, String homeDir, String workDir, String dataDir) {
 		super();		
 		this.name = name;
 		this.password = password;
@@ -31,6 +32,8 @@ public class User {
 		this.workGroup = workGroup;
 		this.role = role;
 		this.homeDir = homeDir;
+		this.workDir = workDir;
+		this.dataDir = dataDir;
 	}
 
 //	@Id
@@ -95,6 +98,15 @@ public class User {
 	}
 
 	
+	
+	public String getWorkDir() {
+		return workDir;
+	}
+
+	public void setWorkDir(String workDir) {
+		this.workDir = workDir;
+	}
+
 	public String getDataDir() {
 		return dataDir;
 	}
@@ -106,9 +118,10 @@ public class User {
 	@Override
 	public String toString() {
 		return "User [name=" + name + ", password=" + password + ", email=" + email + ", workGroup=" + workGroup
-				+ ", role=" + role + ", homeDir=" + homeDir + ", dataDir=" + dataDir + "]";
+				+ ", role=" + role + ", homeDir=" + homeDir + ", workDir=" + workDir + ", dataDir=" + dataDir + "]";
 	}
 
+	
 	
 	
 	

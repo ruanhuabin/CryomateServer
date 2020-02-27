@@ -127,7 +127,14 @@ public class LoginController {
     	String email = request.getParameter("email");
     	String role = request.getParameter("role");
     	String workGroup = request.getParameter("workGroup");
-    	String homeDir = this.userHomeDirPrefix + name;
+    	String homeDir = this.userHomeDirPrefix + "/" + name;
+    	
+    	if(workGroup == null || workGroup.equals(""))
+    	{
+    		workGroup = name;
+    	}
+    	String workDir = this.workDirPrefix + "/" + workGroup + "/" + name;
+    	String dataDir = this.dataDirPrefix + "/" + workGroup + "/" + name;
     	
     	StringBuffer strBuffer = new StringBuffer();
     	strBuffer.append("register operation:\n");
@@ -137,6 +144,8 @@ public class LoginController {
     	strBuffer.append("\trole:" + role + "\n");
     	strBuffer.append("\tworkGroup:" + workGroup + "\n");
     	strBuffer.append("\thomeDir:" + homeDir + "\n");
+    	strBuffer.append("\tworkDir:" + workDir + "\n");
+    	strBuffer.append("\tdataDir:" + dataDir + "\n");
     	System.out.println(strBuffer.toString());
     	
     	//Check whether user name is already used 
@@ -152,19 +161,15 @@ public class LoginController {
     		
     	}
     	//insert new user into database    	
-    	User newUser = new User(name, password, email, workGroup, role, homeDir);
+    	User newUser = new User(name, password, email, workGroup, role, homeDir, workDir, dataDir);
     	userRepos.save(newUser);
     	System.out.println("Register: create new user " + name + " success");
     	
     	//invoke script to create system user
     	
-    	if(workGroup == null || workGroup.equals(""))
-    	{
-    		workGroup = name;
-    	}
     	
-    	String workDir = this.workDirPrefix + "/" + workGroup + "/" + name;
-    	String dataDir = this.dataDirPrefix + "/" + workGroup + "/" + name;
+    	
+    	
     	
     	String command[] = new String[7];
     	command[0] = "./warehouse/script/register.sh";
