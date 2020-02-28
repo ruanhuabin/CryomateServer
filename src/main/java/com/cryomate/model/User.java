@@ -7,29 +7,28 @@ import javax.persistence.Id;
 import javax.persistence.NamedQuery;
 
 @Entity
-@NamedQuery(name="User.withNameAndPasswordNamedQuery", query="select u from User u where u.name=?1 and u.password=?2")
-@NamedQuery(name="User.withNameAndWorkGroupNamedQuery", query="select u from User u where u.name=?1 and u.workGroup=?2")
+@NamedQuery(name="User.withUserNameAndPasswordNamedQuery", query="select u from User u where u.userName=?1 and u.password=?2")
+@NamedQuery(name="User.withUserNameAndUserGroupNamedQuery", query="select u from User u where u.userName=?1 and u.userGroup=?2")
 public class User {	
-	private String name;
+	private String userName;
 	private String password;
 	private String email;
-	private String workGroup;
+	private String userGroup;
 	private String role;
 	private String homeDir;	
 	private String workDir;
-	private String dataDir;	
-	
+	private String dataDir;		
 
 	public User() {
 		super();
 	}
 
-	public User( String name, String password, String email, String workGroup, String role, String homeDir, String workDir, String dataDir) {
+	public User(String name, String password, String email, String workGroup, String role, String homeDir, String workDir, String dataDir) {
 		super();		
-		this.name = name;
+		this.userName = name;
 		this.password = password;
 		this.email = email;
-		this.workGroup = workGroup;
+		this.userGroup = workGroup;
 		this.role = role;
 		this.homeDir = homeDir;
 		this.workDir = workDir;
@@ -47,12 +46,12 @@ public class User {
 //	}
 
 	@Id
-	public String getName() {
-		return name;
+	public String getUserName() {
+		return userName;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
 
 	public String getPassword() {
@@ -71,12 +70,12 @@ public class User {
 		this.email = email;
 	}
 
-	public String getWorkGroup() {
-		return workGroup;
+	public String getUserGroup() {
+		return userGroup;
 	}
 
-	public void setWorkGroup(String workGroup) {
-		this.workGroup = workGroup;
+	public void setUserGroup(String userGroup) {
+		this.userGroup = userGroup;
 	}
 
 	public String getRole() {
@@ -117,7 +116,7 @@ public class User {
 
 	@Override
 	public String toString() {
-		return "User [name=" + name + ", password=" + password + ", email=" + email + ", workGroup=" + workGroup
+		return "User [userName=" + userName + ", password=" + password + ", email=" + email + ", userGroup=" + userGroup
 				+ ", role=" + role + ", homeDir=" + homeDir + ", workDir=" + workDir + ", dataDir=" + dataDir + "]";
 	}
 

@@ -12,21 +12,21 @@ import com.cryomate.model.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, String>{
 	
-	User getByName(String name);
+	User getByUserName(String userName);
 	
-	void deleteByName(String name);
+	void deleteByUserName(String userName);
 	
 	
-	List<User> findByWorkGroup(String workGroup22);
+	List<User> findByUserGroup(String workGroup22);
 	
-	User findByNameAndPassword(String name, String password);
+	User findByUserNameAndPassword(String userName, String password);
 	
-	@Query("select u from User u where u.name= :name and u.password= :password")
-	User withNameAndPasswordQuery(@Param("name")String name, @Param("password")String password);
+	@Query("select u from User u where u.userName= :userName and u.password= :password")
+	User withUserNameAndPasswordQuery(@Param("userName")String userName, @Param("password")String password);
 
-	User withNameAndPasswordNamedQuery(String name, String password);
+	User withUserNameAndPasswordNamedQuery(String userName, String password);
 	
-	User withNameAndWorkGroupNamedQuery(String name, String workGroup);
+	User withUserNameAndUserGroupNamedQuery(String userName, String userGroup);
 	
 	
 	

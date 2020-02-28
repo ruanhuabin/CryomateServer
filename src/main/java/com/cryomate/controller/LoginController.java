@@ -62,7 +62,7 @@ public class LoginController {
     String info = "登录逻辑";
     System.out.println(info);
     
-    User user = userRepos.findByNameAndPassword(name, password);
+    User user = userRepos.findByUserNameAndPassword(name, password);
  // 登录认证，认证成功后将用户信息放到session中
     if(user != null)
     {
@@ -149,7 +149,7 @@ public class LoginController {
     	System.out.println(strBuffer.toString());
     	
     	//Check whether user name is already used 
-    	User user = userRepos.getByName(name);
+    	User user = userRepos.getByUserName(name);
     	if(user != null)
     	{
     		StringBuffer retMsg = new StringBuffer();
@@ -193,7 +193,7 @@ public class LoginController {
     		return "Error: user name is null";
     	}
     	
-    	User user = userRepos.getByName(name);
+    	User user = userRepos.getByUserName(name);
     	if(user == null)
     	{
     		return "Error: user [ " + name + " ] is not exist";
@@ -204,17 +204,17 @@ public class LoginController {
     	User currUser = (User)(request.getSession().getAttribute("userInfo"));    	
     	
     	//We can not remove ourself
-    	if(currUser != null && currUser.getName().equals(name))
+    	if(currUser != null && currUser.getUserName().equals(name))
     	{
     		System.out.println("self delete self");
-    		return "Error: user [ " + currUser.getName() + " ] can't not be removed by itself";
+    		return "Error: user [ " + currUser.getUserName() + " ] can't not be removed by itself";
     	}
     	String currUserRole = currUser.getRole(); 
     	
     	if(currUserRole != null && currUserRole.equals("admin"))
     	{
     		User u = new User();
-        	u.setName(name);
+        	u.setUserName(name);
         	userRepos.delete(u);
         	return "remove user success";
     	}
