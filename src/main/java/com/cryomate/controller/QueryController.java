@@ -29,7 +29,7 @@ import java.util.UUID;
 import com.fasterxml.uuid.Generators;
 
 import com.cryomate.model.Job2DClassification;
-import com.cryomate.model.UserExample;
+
 import com.cryomate.repository.Job2DClassificationRepository;
 import com.cryomate.utils.JDBCUtils;
 import com.cryomate.utils.KeyGenerator;
@@ -551,43 +551,43 @@ public class QueryController {
 		return "data send success";
 	}
 
-	@RequestMapping("/api/execSQL")
-	@ResponseBody
-	public String execSQL(HttpServletRequest request, HttpServletResponse response) {
-		UserExample employee = null;
-		List<UserExample> list = new ArrayList();
-		Connection conn = null;
-		PreparedStatement ps = null;
-		ResultSet result = null;
-		String sql = "select * from users";
-		try {
-			// 创建连接
-			conn = JDBCUtils.getConnetions();
-			// 创建prepareStatement对象，用于执行SQL
-			ps = conn.prepareStatement(sql);
-			// 获取查询结果集
-			result = ps.executeQuery();
-			while (result.next()) {
-				// employee = new
-				// User(result.getInt(1),result.getString(2),result.getString(3));
-				employee = new UserExample();
-				employee.setId(result.getInt(1));
-				employee.setFirstName(result.getString(2));
-				employee.setLastName(result.getString(3));
-				list.add(employee);
-
-				System.out.printf("user id = %d, firstname = %s, lastname = %s\n", employee.getId(),
-						employee.getFirstName(), employee.getLastName());
-			}
-			System.out.println("list = " + list);
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			JDBCUtils.release(result, ps, conn);
-		}
-
-		return null;
-	}
+//	@RequestMapping("/api/execSQL")
+//	@ResponseBody
+//	public String execSQL(HttpServletRequest request, HttpServletResponse response) {
+//		UserExample employee = null;
+//		List<UserExample> list = new ArrayList();
+//		Connection conn = null;
+//		PreparedStatement ps = null;
+//		ResultSet result = null;
+//		String sql = "select * from users";
+//		try {
+//			// 创建连接
+//			conn = JDBCUtils.getConnetions();
+//			// 创建prepareStatement对象，用于执行SQL
+//			ps = conn.prepareStatement(sql);
+//			// 获取查询结果集
+//			result = ps.executeQuery();
+//			while (result.next()) {
+//				// employee = new
+//				// User(result.getInt(1),result.getString(2),result.getString(3));
+//				employee = new UserExample();
+//				employee.setId(result.getInt(1));
+//				employee.setFirstName(result.getString(2));
+//				employee.setLastName(result.getString(3));
+//				list.add(employee);
+//
+//				System.out.printf("user id = %d, firstname = %s, lastname = %s\n", employee.getId(),
+//						employee.getFirstName(), employee.getLastName());
+//			}
+//			System.out.println("list = " + list);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		} finally {
+//			JDBCUtils.release(result, ps, conn);
+//		}
+//
+//		return null;
+//	}
 
 	@RequestMapping("/api/cSQL_Command")
 	@ResponseBody

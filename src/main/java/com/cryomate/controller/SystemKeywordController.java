@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cryomate.exception.ResourceNotFoundException;
 import com.cryomate.model.SystemKeyword;
-import com.cryomate.model.UserExample;
 import com.cryomate.repository.SystemKeywordRepository;
 import com.cryomate.repository.UserRepository;
 
