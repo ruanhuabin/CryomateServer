@@ -27,13 +27,13 @@ sleep 1
 sshpass -p $str ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@${loginNode} "chmod u+x /tmp/create_user.sh;bash /tmp/create_user.sh ${groupName} ${userName} ${password} ${homeDirPrefix} ${workDir} ${dataDir}"
 
 #Copy ssh password-less script to $loginNode 
-sshpass -p${str} scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ./warehouse/script/ssh_passless.sh root@${loginNode}:/tmp/ssh_passless.sh
+userPassword=${password}
+sshpass -p${userPassword} scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ./warehouse/script/ssh_passless.sh ${userName}@${loginNode}:/tmp/ssh_passless.sh
 
 sleep 1
 
 # Running ssh password-less operation on $loginNode
-userPassword=${password}
-sshpass -p ${userPassword} ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${userName}@${loginNode} "chmod u+x /tmp/ssh_passless.sh;bash /tmp/ssh_passless.sh"
+sshpass -p ${userPassword} ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${userName}@${loginNode} "chmod 777 /tmp/ssh_passless.sh;bash /tmp/ssh_passless.sh"
 
 # Update NIS info
-sshpass -p $str ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@${loginNode} "make -C /var/yp/ "
+#sshpass -p $str ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@${loginNode} "make -C /var/yp/ "

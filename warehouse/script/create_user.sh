@@ -24,6 +24,7 @@ then
     useradd -g ${groupName} -b ${homeDirPrefix} $userName; 
     #set password for new created user 
     echo $password | passwd --stdin $userName; 
+    make -C /var/yp/
 else
     echo "Warning: user [${userName}] is already exist, skipping create user"
 fi
