@@ -67,7 +67,7 @@ public class LoginController {
     if(user != null)
     {
     	//request.getSession().setAttribute("userInfo", name + " - " + password);
-    	request.getSession().setAttribute("userInfo", "" + user.getRole());
+    	request.getSession().setAttribute("userInfo", user);
     	System.out.println("user [ " + name + " ] is valid");
         info = "login success";
     }
@@ -167,10 +167,6 @@ public class LoginController {
     	
     	//invoke script to create system user
     	
-    	
-    	
-    	
-    	
     	String command[] = new String[7];
     	command[0] = "./warehouse/script/register.sh";
     	command[1] = workGroup;
@@ -184,10 +180,7 @@ public class LoginController {
     	System.out.println(command[0] + "running result: " + result.toString());
         	
     	return "register success";
-    }
-    
-    
-    
+    }    
     
     @RequestMapping(value = "/remove")
     @ResponseBody
@@ -206,9 +199,17 @@ public class LoginController {
     		return "Error: user [ " + name + " ] is not exist";
     	}
     	
-    	System.out.println("User [ " + name + " ] is exist");  
+    	System.out.println("-------->User [ " + name + " ] is exist");    	   	
+    	 	
+    	User currUser = (User)(request.getSession().getAttribute("userInfo"));    	
     	
-    	String currUserRole = (String)request.getSession().getAttribute("userInfo");
+    	//We can not remove ourself
+    	if(currUser != null && currUser.getName().equals(name))
+    	{
+    		System.out.println("self delete self");
+    		return "Error: user [ " + currUser.getName() + " ] can't not be removed by itself";
+    	}
+    	String currUserRole = currUser.getRole(); 
     	
     	if(currUserRole != null && currUserRole.equals("admin"))
     	{
@@ -219,7 +220,7 @@ public class LoginController {
     	}
     	else
     	{
-    		return "permission denied";
+    		return "Error: permission denied";
     	}  	
     	
     }
