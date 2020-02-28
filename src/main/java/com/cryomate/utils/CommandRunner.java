@@ -9,10 +9,6 @@ public class CommandRunner {
 	
 	public static String runCommand(String[] command)
 	{	
-//		String command[] = new String[2];
-//		command[0] = "./warehouse/script/execSQL.sh";
-//		command[1] = sql;	
-
 		StringBuffer result = new StringBuffer();
 		Process process = null;
 		BufferedReader bufrIn = null;

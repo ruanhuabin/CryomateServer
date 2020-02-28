@@ -126,15 +126,48 @@ public class LoginController {
     	String password = request.getParameter("pwd");
     	String email = request.getParameter("email");
     	String role = request.getParameter("role");
-    	String workGroup = request.getParameter("workGroup");
-    	String homeDir = this.userHomeDirPrefix + "/" + name;
+    	String userGroup = request.getParameter("userGroup");
     	
-    	if(workGroup == null || workGroup.equals(""))
+    	
+    	if(userGroup == null || userGroup.equals(""))
     	{
-    		workGroup = name;
+    		userGroup = name;
     	}
-    	String workDir = this.workDirPrefix + "/" + workGroup + "/" + name;
-    	String dataDir = this.dataDirPrefix + "/" + workGroup + "/" + name;
+    	
+    	String userHomeDirPrefix;
+    	if(this.userHomeDirPrefix.charAt(this.userHomeDirPrefix.length() - 1) != '/')
+    	{
+    		userHomeDirPrefix = this.userHomeDirPrefix + "/";
+    	}
+    	else
+    	{
+    		userHomeDirPrefix = this.userHomeDirPrefix;
+    	}
+    	
+    	String dataDirPrefix;
+    	if(this.dataDirPrefix.charAt(this.dataDirPrefix.length() - 1) != '/')
+    	{
+    		dataDirPrefix = this.dataDirPrefix + "/";
+    	}
+    	else
+    	{
+    		dataDirPrefix = this.dataDirPrefix;
+    	}
+    	
+    	String workDirPrefix;
+    	if(this.workDirPrefix.charAt(this.workDirPrefix.length() - 1) != '/')
+    	{
+    		workDirPrefix = this.workDirPrefix + "/";
+    	}
+    	else
+    	{
+    		workDirPrefix = this.workDirPrefix;
+    	}
+    		
+    	
+    	String homeDir = userHomeDirPrefix +  name;
+    	String workDir = workDirPrefix + userGroup + "/" + name;
+    	String dataDir = dataDirPrefix + userGroup + "/" + name;
     	
     	StringBuffer strBuffer = new StringBuffer();
     	strBuffer.append("register operation:\n");
@@ -142,7 +175,7 @@ public class LoginController {
     	strBuffer.append("\tpassword:" + password + "\n");
     	strBuffer.append("\temail:" + email + "\n");
     	strBuffer.append("\trole:" + role + "\n");
-    	strBuffer.append("\tworkGroup:" + workGroup + "\n");
+    	strBuffer.append("\tworkGroup:" + userGroup + "\n");
     	strBuffer.append("\thomeDir:" + homeDir + "\n");
     	strBuffer.append("\tworkDir:" + workDir + "\n");
     	strBuffer.append("\tdataDir:" + dataDir + "\n");
@@ -161,7 +194,7 @@ public class LoginController {
     		
     	}
     	//insert new user into database    	
-    	User newUser = new User(name, password, email, workGroup, role, homeDir, workDir, dataDir);
+    	User newUser = new User(name, password, email, userGroup, role, homeDir, workDir, dataDir);
     	userRepos.save(newUser);
     	System.out.println("Register: create new user " + name + " success");
     	
@@ -169,7 +202,7 @@ public class LoginController {
     	
     	String command[] = new String[7];
     	command[0] = "./warehouse/script/register.sh";
-    	command[1] = workGroup;
+    	command[1] = userGroup;
     	command[2] = name;
     	command[3] = password;
     	command[4] = this.userHomeDirPrefix;
@@ -177,7 +210,7 @@ public class LoginController {
     	command[6] = dataDir;
     	
     	String result = CommandRunner.runCommand(command);
-    	System.out.println(command[0] + "running result: " + result.toString());
+    	System.out.println(command[0] + ": running result: " + result.toString());
         	
     	return "register success";
     }    
