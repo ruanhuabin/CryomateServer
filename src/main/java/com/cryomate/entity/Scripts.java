@@ -50,7 +50,7 @@ public class Scripts {
 		this.version = version;
 	}
 
-	@Column(length=4096, name="ScriptFile")
+	@Column(length=2048, name="ScriptFile")
 	public String getScriptFile() {
 		return scriptFile;
 	}

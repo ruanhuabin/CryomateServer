@@ -105,7 +105,7 @@ public class Jobs {
 		this.scriptID = scriptID;
 	}
 
-	@Column(length=4096,name="ScriptFile")
+	@Column(length=2048,name="ScriptFile")
 	public String getScripFile() {
 		return scripFile;
 	}
@@ -135,7 +135,7 @@ public class Jobs {
 		this.jobType = jobType;
 	}
 
-	@Column(length=4096,name="SettingFile")
+	@Column(length=2048,name="SettingFile")
 	public String getSettingFile() {
 		return settingFile;
 	}
@@ -165,7 +165,7 @@ public class Jobs {
 		this.dateAdd = dateAdd;
 	}
 
-	@Column(length=4096,name="Path")
+	@Column(length=2048,name="Path")
 	public String getPath() {
 		return path;
 	}
@@ -175,7 +175,7 @@ public class Jobs {
 		this.path = path;
 	}
 
-	@Column(length=4096,name="InfoFile")
+	@Column(length=2048,name="InfoFile")
 	public String getInfoFile() {
 		return infoFile;
 	}

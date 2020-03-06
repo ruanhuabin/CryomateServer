@@ -92,7 +92,7 @@ public class JobsAuto {
 		this.pipelineID = pipelineID;
 	}
 
-	@Column(length=4096,name="PipelineFile")
+	@Column(length=2048,name="PipelineFile")
 	public String getPipelineFile() {
 		return pipelineFile;
 	}
@@ -102,7 +102,7 @@ public class JobsAuto {
 		this.pipelineFile = pipelineFile;
 	}
 
-	@Column(length=4096,name="Settingfile")
+	@Column(length=2048,name="Settingfile")
 	public String getSettingFile() {
 		return settingFile;
 	}
@@ -132,7 +132,7 @@ public class JobsAuto {
 		this.dateAdd = dateAdd;
 	}
 
-	@Column(length=4096,name="Path")
+	@Column(length=2048,name="Path")
 	public String getPath() {
 		return path;
 	}
@@ -142,7 +142,7 @@ public class JobsAuto {
 		this.path = path;
 	}
 
-	@Column(length=4096, name="InfoFile")
+	@Column(length=2048, name="InfoFile")
 	public String getInfoFile() {
 		return infoFile;
 	}

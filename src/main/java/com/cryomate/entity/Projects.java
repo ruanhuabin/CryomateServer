@@ -73,7 +73,7 @@ public class Projects {
 		this.dateAdd = dateAdd;
 	}
 	
-	@Column(length=4096, name="Path")
+	@Column(length=2048, name="Path")
 	public String getPath() {
 		return path;
 	}
@@ -81,7 +81,7 @@ public class Projects {
 		this.path = path;
 	}
 	
-	@Column(length=4096, name="InfoFile")
+	@Column(length=2048, name="InfoFile")
 	public String getInfoFile() {
 		return infoFile;
 	}

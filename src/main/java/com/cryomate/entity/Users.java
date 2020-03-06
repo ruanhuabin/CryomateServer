@@ -3,10 +3,13 @@ package com.cryomate.entity;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 @Entity
 @Table(name="Users")
+@NamedQuery(name="Users.withUserNameAndPasswordNamedQuery", query="select u from Users u where u.userName=?1 and u.password=?2")
+@NamedQuery(name="Users.withUserNameAndUserGroupNamedQuery", query="select u from Users u where u.userName=?1 and u.userGroup=?2")
 public class Users {
 	
 	
@@ -88,7 +91,7 @@ public class Users {
 		this.dateExp = dateExp;
 	}
 	
-	@Column(length=4096, name="HomeDir")
+	@Column(length=2048, name="HomeDir")
 	public String getHomeDir() {
 		return homeDir;
 	}
@@ -96,7 +99,7 @@ public class Users {
 		this.homeDir = homeDir;
 	}
 	
-	@Column(length=4096, name="WorkDir")
+	@Column(length=2048, name="WorkDir")
 	public String getWorkDir() {
 		return workDir;
 	}
@@ -104,7 +107,7 @@ public class Users {
 		this.workDir = workDir;
 	}
 	
-	@Column(length=4096, name="DataDir")
+	@Column(length=2048, name="DataDir")
 	public String getDataDir() {
 		return dataDir;
 	}
