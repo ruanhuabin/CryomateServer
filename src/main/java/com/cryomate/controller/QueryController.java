@@ -28,20 +28,19 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import java.util.UUID;
 import com.fasterxml.uuid.Generators;
 
-import com.cryomate.model.Job2DClassification;
+//import com.cryomate.model.Job2DClassification;
 
-import com.cryomate.repository.Job2DClassificationRepository;
+//import com.cryomate.repository.Job2DClassificationRepository;
 import com.cryomate.utils.JDBCUtils;
 import com.cryomate.utils.KeyGenerator;
 
 @Controller
 @RequestMapping("/")
 public class QueryController {
-	@Autowired
-	private Job2DClassificationRepository job2DRepository;
+	//@Autowired
+	//private Job2DClassificationRepository job2DRepository;
 
-//	@Autowired
-//	private DemoDaoImpl dao;
+
 
 	//@RequestMapping("/api2/cSys_Command")
 	@RequestMapping("/api/cSys_Command")

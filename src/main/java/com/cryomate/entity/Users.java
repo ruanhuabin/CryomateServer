@@ -1,14 +1,19 @@
 package com.cryomate.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
 @Table(name="Users")
-public class Users {	
+public class Users {
+	
+	
 	private String userName;
+	
 	private String password;
-	private String group;
+	private String userGroup;
 	private String authority;
 	private String dateAdd;
 	private String dateExp;
@@ -25,7 +30,7 @@ public class Users {
 		super();
 		this.userName = userName;
 		this.password = password;
-		this.group = group;
+		this.userGroup = group;
 		this.authority = authority;
 		this.dateAdd = dateAdd;
 		this.dateExp = dateExp;
@@ -33,63 +38,84 @@ public class Users {
 		this.workDir = workDir;
 		this.dataDir = dataDir;
 	}
+	
+	@Id	
+	@Column(name="UserName")
 	public String getUserName() {
 		return userName;
 	}
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
+	
+	@Column(name="Password")
 	public String getPassword() {
 		return password;
 	}
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	public String getGroup() {
-		return group;
+	@Column(name="UserGroup")
+	public String getUserGroup() {
+		return userGroup;
 	}
-	public void setGroup(String group) {
-		this.group = group;
+	public void setUserGroup(String group) {
+		this.userGroup = group;
 	}
+	
+	@Column(name="Authority")
 	public String getAuthority() {
 		return authority;
 	}
+	
 	public void setAuthority(String authority) {
 		this.authority = authority;
 	}
+	
+	@Column(name="DateAdd")
 	public String getDateAdd() {
 		return dateAdd;
 	}
 	public void setDateAdd(String dateAdd) {
 		this.dateAdd = dateAdd;
 	}
+	
+	@Column(name="DateExp")
 	public String getDateExp() {
 		return dateExp;
 	}
 	public void setDateExp(String dateExp) {
 		this.dateExp = dateExp;
 	}
+	
+	@Column(length=4096, name="HomeDir")
 	public String getHomeDir() {
 		return homeDir;
 	}
 	public void setHomeDir(String homeDir) {
 		this.homeDir = homeDir;
 	}
+	
+	@Column(length=4096, name="WorkDir")
 	public String getWorkDir() {
 		return workDir;
 	}
 	public void setWorkDir(String workDir) {
 		this.workDir = workDir;
 	}
+	
+	@Column(length=4096, name="DataDir")
 	public String getDataDir() {
 		return dataDir;
 	}
 	public void setDataDir(String dataDir) {
 		this.dataDir = dataDir;
 	}
+	
+	
 	@Override
 	public String toString() {
-		return "Users [userName=" + userName + ", password=" + password + ", group=" + group + ", authority="
+		return "Users [userName=" + userName + ", password=" + password + ", group=" + userGroup + ", authority="
 				+ authority + ", dateAdd=" + dateAdd + ", dateExp=" + dateExp + ", homeDir=" + homeDir + ", workDir="
 				+ workDir + ", dataDir=" + dataDir + "]";
 	}
