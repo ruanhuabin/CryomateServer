@@ -49,6 +49,8 @@ public class JobParticlePicking {
 	public String getParentTagIDs() {
 		return parentTagIDs;
 	}
+	
+	
 	public void setParentTagIDs(String parentTagIDs) {
 		this.parentTagIDs = parentTagIDs;
 	}

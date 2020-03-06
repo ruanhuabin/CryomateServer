@@ -6,7 +6,7 @@ import javax.persistence.*;
 @Table(name="Job_2DClassification")
 public class Job2DClassification {
 	private String ID;
-	private String userName;
+	private String userName;	
 	private String userGroup;
 	private String tagID;
 	private String parentTagIDs;
@@ -33,6 +33,8 @@ public class Job2DClassification {
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
+	
+	
 	public String getUserGroup() {
 		return userGroup;
 	}
@@ -46,7 +48,7 @@ public class Job2DClassification {
 		this.tagID = tagID;
 	}
 	
-	@Column(length=4096)
+	@Column(length=4096, name="ParentTagIDs")
 	public String getParentTagIDs() {
 		return parentTagIDs;
 	}
