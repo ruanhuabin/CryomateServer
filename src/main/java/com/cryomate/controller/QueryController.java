@@ -14,6 +14,8 @@ import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -821,6 +823,18 @@ public class QueryController {
 
         return dbID;
     }
+	
+	@RequestMapping("/api/cGet_Time")
+	@ResponseBody
+	public String getTime(HttpServletRequest request, HttpServletResponse response)
+	{
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");  
+		LocalDateTime now = LocalDateTime.now();  
+		String currTime = dtf.format(now);
+		
+		return "Time=\"" + currTime + "\"";
+		
+	}
 	
 
 

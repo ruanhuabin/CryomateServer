@@ -17,6 +17,7 @@ public class CommandRunner {
 			// String[] command = { command};
 			// 执行命令, 返回一个子进程对象（命令在子进程中执行）
 			process = Runtime.getRuntime().exec(command, null, new File("./"));
+			
 			// 方法阻塞, 等待命令执行完成（成功会返回0）
 			process.waitFor();
 			// 获取命令执行结果, 有两个结果: 正常的输出 和 错误的输出（PS: 子进程的输出就是主进程的输入）

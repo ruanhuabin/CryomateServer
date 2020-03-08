@@ -9,7 +9,7 @@ public class LoginConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new LoginInterceptor())
                 .addPathPatterns("/**")
-                .excludePathPatterns("/user/cLogin", "/user/cLogout", "/user/cRegister");
+                .excludePathPatterns("/user/cLogin", "/user/cLogout", "/user/cRegister", "/test/**");
                 //.excludePathPatterns("/api/**", "/user/login", "/user/logout");
     }
 }
