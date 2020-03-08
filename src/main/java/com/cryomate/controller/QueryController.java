@@ -27,6 +27,8 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import java.util.UUID;
 import com.fasterxml.uuid.Generators;
+import com.cryomate.entity.Tables;
+import com.cryomate.repository.TablesRepository;
 
 //import com.cryomate.model.Job2DClassification;
 
@@ -40,6 +42,8 @@ public class QueryController {
 	//@Autowired
 	//private Job2DClassificationRepository job2DRepository;
 
+	@Autowired
+	private TablesRepository tablesRepository;
 
 
 	//@RequestMapping("/api2/cSys_Command")
@@ -791,6 +795,33 @@ public class QueryController {
 
         return ID;
     }
+	
+	@RequestMapping("/api/cGen_DBID")
+	@ResponseBody
+	public String genDBID(HttpServletRequest request, HttpServletResponse response) 
+    {
+		String tableName = request.getParameter("pDBTable");
+		
+		if(tableName == null || tableName.equals(""))
+		{
+			System.out.println("Error: Parameter [pDBTable] is null or empty");
+			return "Error: Parameter [pDBTable] is null or empty";
+		}
+		
+		
+		Tables t = tablesRepository.getByName(tableName);
+		if(t== null)
+		{			
+			System.out.println("Error: Table : [ " + tableName + " ] is not exist");
+			return "Error: Table : [" + tableName + " ] is not exist";
+		}
+		String tableIndex = t.getTableIndex();
+        String ID = KeyGenerator.getNextID();
+        String dbID = tableIndex + "_" + ID;
+
+        return dbID;
+    }
+	
 
 
 }

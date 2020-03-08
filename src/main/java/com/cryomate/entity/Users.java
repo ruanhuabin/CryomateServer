@@ -6,6 +6,8 @@ import javax.persistence.Id;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.ColumnTransformer;
+
 @Entity
 @Table(name="Users")
 @NamedQuery(name="Users.withUserNameAndPasswordNamedQuery", query="select u from Users u where u.userName=?1 and u.password=?2")
@@ -52,6 +54,14 @@ public class Users {
 	}
 	
 	@Column(name="Password")
+	//加密密码字段，支持中文密码的加密和解密
+	@ColumnTransformer(  
+            //read = "AES_DECRYPT(UNHEX(Password), 'ankon')",			
+			read = "CAST(AES_DECRYPT(UNHEX(Password), 'ankon') as char(128))",
+            write = "HEX(AES_ENCRYPT(?, 'ankon'))"
+    )
+	
+	
 	public String getPassword() {
 		return password;
 	}

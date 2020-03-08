@@ -104,6 +104,13 @@
             <artifactId>java-uuid-generator</artifactId>
             <version>3.1.4</version>
         </dependency>
+        
+        <!-- Used for encrypt password field in table users -->
+        <dependency>
+			<groupId>com.github.ulisesbocchio</groupId>
+			<artifactId>jasypt-spring-boot-starter</artifactId>
+			<version>1.14</version>
+		</dependency>
 
 
 		<!-- ><dependency -->
