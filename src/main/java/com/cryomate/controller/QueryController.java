@@ -30,7 +30,9 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import java.util.UUID;
 import com.fasterxml.uuid.Generators;
 import com.cryomate.entity.Tables;
+import com.cryomate.entity.Users;
 import com.cryomate.repository.TablesRepository;
+import com.cryomate.utils.CommandRunner;
 
 //import com.cryomate.model.Job2DClassification;
 
@@ -48,72 +50,100 @@ public class QueryController {
 	private TablesRepository tablesRepository;
 
 
-	//@RequestMapping("/api2/cSys_Command")
 	@RequestMapping("/api/cSys_Command")
 	@ResponseBody
-	public String executeSystemCommand(HttpServletRequest request, HttpServletResponse response) {
+	public String executeSystemCommandV2(HttpServletRequest request, HttpServletResponse response) 
+	{
 		String cmdString = request.getParameter("pParaString");
-		String command[];
-
-		if (cmdString != null && cmdString != "") {
-
-			command = cmdString.split(" ");
-		} else {
-			return "pParaString is not valid";
+		if(cmdString == null || cmdString.equals(""))
+		{
+			return "Error: pParaString is null or empty";
 		}
-
-		System.out.print("command = ");
-		for (String cmd : command) {
-			System.out.print(cmd + " ");
-		}
-		System.out.println();
-
-		StringBuffer result = new StringBuffer();
-		Process process = null;
-		BufferedReader bufrIn = null;
-		BufferedReader bufrError = null;
-		try {
-			// String[] command = { command};
-			// 执行命令, 返回一个子进程对象（命令在子进程中执行）
-			process = Runtime.getRuntime().exec(command, null, new File("./"));
-			// 方法阻塞, 等待命令执行完成（成功会返回0）
-			process.waitFor();
-			// 获取命令执行结果, 有两个结果: 正常的输出 和 错误的输出（PS: 子进程的输出就是主进程的输入）
-			bufrIn = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
-			bufrError = new BufferedReader(new InputStreamReader(process.getErrorStream(), "UTF-8"));
-			// 读取输出
-			String line;
-			while ((line = bufrIn.readLine()) != null) {
-				result.append(line).append('\n');
-			}
-			while ((line = bufrError.readLine()) != null) {
-				// System.out.println("error message add: " + line + "\n");
-				result.append(line).append('\n');
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("====================>execute failed1");
-			return "command executes failed";
-		} finally {
-			try {
-				bufrIn.close();
-				bufrError.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				System.out.println("====================>execute failed2");
-				return "command executes failed";
-			}
-
-			// 销毁子进程
-			if (process != null) {
-				process.destroy();
-			}
-
-		}
-
-		return result.toString();
+		Users currUser = (Users)request.getSession().getAttribute("userInfo");
+		
+		if(currUser == null)
+		{
+			return "Error: no login user is found."
+;		}
+		String[] command = new String[4];
+		command[0] = "./warehouse/script/execSysCommand.sh";
+		command[1] = currUser.getUserName();
+		command[2] = currUser.getPassword();
+		command[3] = cmdString;
+		
+		String result = CommandRunner.runCommand(command);
+		
+		return result;
+		
+	
 	}
+	
+		
+//	@RequestMapping("/api/cSys_Command")
+//	@ResponseBody
+//	public String executeSystemCommand(HttpServletRequest request, HttpServletResponse response) {
+//		String cmdString = request.getParameter("pParaString");
+//		String command[];
+//
+//		if (cmdString != null && cmdString != "") {
+//
+//			command = cmdString.split(" ");
+//		} else {
+//			return "pParaString is not valid";
+//		}
+//
+//		System.out.print("command = ");
+//		for (String cmd : command) {
+//			System.out.print(cmd + " ");
+//		}
+//		System.out.println();
+//
+//		StringBuffer result = new StringBuffer();
+//		Process process = null;
+//		BufferedReader bufrIn = null;
+//		BufferedReader bufrError = null;
+//		try {
+//			// String[] command = { command};
+//			// 执行命令, 返回一个子进程对象（命令在子进程中执行）
+//			process = Runtime.getRuntime().exec(command, null, new File("./"));
+//			// 方法阻塞, 等待命令执行完成（成功会返回0）
+//			process.waitFor();
+//			// 获取命令执行结果, 有两个结果: 正常的输出 和 错误的输出（PS: 子进程的输出就是主进程的输入）
+//			bufrIn = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
+//			bufrError = new BufferedReader(new InputStreamReader(process.getErrorStream(), "UTF-8"));
+//			// 读取输出
+//			String line;
+//			while ((line = bufrIn.readLine()) != null) {
+//				result.append(line).append('\n');
+//			}
+//			while ((line = bufrError.readLine()) != null) {
+//				// System.out.println("error message add: " + line + "\n");
+//				result.append(line).append('\n');
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			System.out.println("====================>execute failed1");
+//			return "command executes failed";
+//		} finally {
+//			try {
+//				bufrIn.close();
+//				bufrError.close();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//				System.out.println("====================>execute failed2");
+//				return "command executes failed";
+//			}
+//
+//			// 销毁子进程
+//			if (process != null) {
+//				process.destroy();
+//			}
+//
+//		}
+//
+//		return result.toString();
+//	}
 
 	private File gen2DClassTarFile(String outputTarFileName) {
 

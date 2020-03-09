@@ -55,7 +55,7 @@ public class CommandRunner {
 		}
 		
 		System.out.println("Command Result: " + command[0] + ": "+ result.toString());
-		return "command executes success";
+		return result.toString();
 
 	}
 
