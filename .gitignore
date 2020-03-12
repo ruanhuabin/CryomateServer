@@ -4,3 +4,4 @@ a.txt
 target
 *.lst
 warehouse/imageDir
+logs

@@ -33,7 +33,11 @@ import org.slf4j.LoggerFactory;
 @RequestMapping("/")
 public class FileServiceController {
 	
-	private static final Logger logger = LoggerFactory.getLogger(FileServiceController.class);  
+	private static final Logger logger = LoggerFactory.getLogger(FileServiceController.class);
+	private static final int SUCCCESS_ACCESS_OK = 0;
+	private static final int ERROR_NO_LOGIN_USER_IS_FOUND = 1;
+	private static final int ERROR_OWNER_PERMISSION_DENIED = 2;
+	  
 	
 	@RequestMapping("/test/cList_Dir")
 	@ResponseBody
@@ -107,7 +111,7 @@ public class FileServiceController {
 		
 	}	
 	
-	@RequestMapping("/test/download")
+	@RequestMapping("/api/download")
 	@ResponseBody
 	public String downloadFile(HttpServletRequest request, HttpServletResponse response) throws IOException
 	{
@@ -115,19 +119,19 @@ public class FileServiceController {
 		String offsetStr = request.getParameter("pOffset");
 		String lengthStr = request.getParameter("pLength");
 		
-		long offset = 0;
+		int offset = 0;
 		if(offsetStr != null && !offsetStr.equals(""))
 		{
-			offset = Long.parseLong(offsetStr);
+			offset = Integer.parseInt(offsetStr);
 		}
 		
-		long length = -1;
+		int readLength = -1;
 		if(lengthStr != null && !lengthStr.equals(""))
 		{
-			length = Long.parseLong(lengthStr);
+			readLength = Integer.parseInt(lengthStr);
 		}
 		
-		logger.debug("fileNameFullPath = {}, length = {}, offset = {}", fileNameFullPath, length, offset);
+		logger.debug("fileNameFullPath = {}, length = {}, offset = {}", fileNameFullPath, readLength, offset);
 		
 		if(fileNameFullPath == null || fileNameFullPath.equals(""))
 		{
@@ -138,54 +142,60 @@ public class FileServiceController {
 		String fileName = fileNameFullPath.substring(index + 1);
 		String fileDir = fileNameFullPath.substring(0, index + 1);		
 		
-		logger.debug("fileDir = " + fileDir + ", fileName = " + fileName);	
-		
-		
-		
+		logger.debug("fileDir = " + fileDir + ", fileName = " + fileName);		
 		
 		if (fileName != null)
 		{			
 			File file = new File(fileDir, fileName);						
 			if (file.exists())
 			{
-				Path path = Paths.get(fileNameFullPath);       
-			    // create object of file attribute.
-		    FileOwnerAttributeView view = Files.getFileAttributeView(path,
-		    FileOwnerAttributeView.class);    
-		    // this will get the owner information.
-		    UserPrincipal userPrincipal = view.getOwner();   
-		    logger.debug("userPrincipal is not null");
-		    // print information.
-		    logger.debug("Owner of the file {} is {} ", fileNameFullPath, userPrincipal.getName());
-		    String fileOwner = userPrincipal.getName();
-		    Users currUser = (Users)request.getSession().getAttribute("userInfo");
-		    if(currUser == null)
-		        {
-		        	logger.info("Error: no login user is found in current session");
-		        	return "Error: No login user is found in current session";
-		        }
-		    String currUserName = currUser.getUserName();
-		    
-		    if(!currUserName.equals(fileOwner))
-		    	{
-		    		return "Error: Permission denied!";
-		    	}	
+				int checkResult = checkPermission(request, fileNameFullPath);	
+				if(checkResult == ERROR_NO_LOGIN_USER_IS_FOUND)
+				{
+					return "Error: No login user is found";
+				}
+				else if(checkResult == ERROR_OWNER_PERMISSION_DENIED)
+				{
+					return "Error: Current Login User is Forbidden to Accssess This File [ " + fileNameFullPath +  " ]";
+				}
+					
 				response.setContentType("application/force-download");// 设置强制下载不打开
 				response.addHeader("Content-Disposition", "attachment;fileName=" + fileName);// 设置文件名
-				byte[] buffer = new byte[1024];
+				
 				FileInputStream fis = null;
-				BufferedInputStream bis = null;
+				BufferedInputStream bis = null;				
 				try
 				{
 					fis = new FileInputStream(file);
+					
 					bis = new BufferedInputStream(fis);
 					OutputStream os = response.getOutputStream();
-					int i = bis.read(buffer);
-					while (i != -1)
+					if(readLength == -1) // read the whole file starting from offset
 					{
-						os.write(buffer, 0, i);
-						i = bis.read(buffer);
-					}					
+						logger.debug("Start to read the whole file {} from offset {}", fileNameFullPath, offset);
+						fis.skip(offset);
+						byte[] buffer = new byte[1024];
+						int i = bis.read(buffer);
+						
+						while (i != -1)
+						{
+							os.write(buffer, 0, i);
+							i = bis.read(buffer);
+						}				
+					}
+					else
+					{
+						logger.debug("Start to read {} bytes from file {} starting from offset {}", readLength, fileNameFullPath, offset);
+						byte[] buffer = new byte[readLength];
+						fis.skip(offset);
+						int i = bis.read(buffer, 0, readLength);
+						
+						if(i != -1)
+						{
+							os.write(buffer, 0, i);							
+						}						
+					}
+						
 				}
 				catch (Exception e)
 				{
@@ -223,6 +233,34 @@ public class FileServiceController {
 			}
 		}
 		return null;
+	}
+
+	private int checkPermission(HttpServletRequest request, String fileNameFullPath) throws IOException {
+		Path path = Paths.get(fileNameFullPath);       
+  // create object of file attribute.
+   FileOwnerAttributeView view = Files.getFileAttributeView(path,
+   FileOwnerAttributeView.class);    
+   // this will get the owner information.
+   UserPrincipal userPrincipal = view.getOwner();   
+   logger.debug("userPrincipal is not null");
+   // print information.
+   logger.debug("Owner of the file {} is {} ", fileNameFullPath, userPrincipal.getName());
+   String fileOwner = userPrincipal.getName();
+   Users currUser = (Users)request.getSession().getAttribute("userInfo");
+   if(currUser == null)
+		{
+			logger.info("Error: no login user is found in current session");
+			//return "Error: No login user is found in current session";
+			return ERROR_NO_LOGIN_USER_IS_FOUND;
+		}
+   String currUserName = currUser.getUserName();
+   
+   if(!currUserName.equals(fileOwner))
+		{
+			return ERROR_OWNER_PERMISSION_DENIED;
+		}
+   
+   return SUCCCESS_ACCESS_OK;
 	}
 
 	@RequestMapping("/test/upload")

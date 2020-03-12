@@ -161,7 +161,7 @@ public class Job2DClassificationController
 		return "data send success";
 	}
 
-	@RequestMapping("/download")
+	@RequestMapping("/demo/download")
 	@ResponseBody
 	public String downloadFile(HttpServletRequest request, HttpServletResponse response)
 	{
