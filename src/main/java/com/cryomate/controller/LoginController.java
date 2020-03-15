@@ -13,6 +13,8 @@ import com.cryomate.repository.UsersRepository;
 import com.cryomate.utils.CommandRunner;
 
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -23,6 +25,8 @@ import javax.servlet.http.HttpSession;
 @Controller
 @RequestMapping(value = "/user")
 public class LoginController {
+	private static final Logger logger = LoggerFactory
+            .getLogger(LoginController.class);
 
 	
 	@Value("${cryomate.user.homedir.prefix}")
@@ -65,33 +69,41 @@ public class LoginController {
 
 		String name = request.getParameter("pUserName");
 		String password = request.getParameter("pPassword");
-		String info = "登录逻辑";
-		System.out.println(info);
+		String info = "登录逻辑";		
+		logger.info(info + ", Request Method = " + request.getMethod());
+		
+		StringBuffer retMessage = new StringBuffer();
 
 		Users user = userRepos.findByUserNameAndPassword(name, password);
 		// 登录认证，认证成功后将用户信息放到session中
-		if (user != null) {
-			// request.getSession().setAttribute("userInfo", name + " - " + password);
+		if (user != null)
+		{
 			request.getSession().setAttribute("userInfo", user);
-			System.out.println("user [ " + name + " ] is valid");
-			info = "login success";
-		} else {
-			info = "login failed";
+			logger.info("user [ " + name + " ] is valid");
+			
+			retMessage.append("pUserName:" + user.getUserName() + "\n");
+			retMessage.append("pUserGroup:" + user.getUserGroup() + "\n");
+			retMessage.append("pAuthority:" + user.getAuthority() + "\n");
+			retMessage.append("pDataAdd:" + user.getDateAdd() + "\n");
+			retMessage.append("pDateExp:" + user.getDateExp() + "\n");
+			retMessage.append("pHomeDir:" + user.getHomeDir() + "\n");
+			retMessage.append("pWorkDir:" + user.getWorkDir() + "\n");
+			retMessage.append("pDataDir:" + user.getDataDir() + "\n");
+			retMessage.append("pEmail:" + user.getEmail() + "\n");
+			retMessage.append("pPhone:" + user.getPhone() + "\n");
+			retMessage.append("login success");		
+			
+			return retMessage.toString();		
+			
+		} else
+		{
+			return "login failed";
 		}
 
-		System.out.println(info + ", Request Method = " + request.getMethod());
-		return info;
+		
+		
 
-		// // 登录认证，认证成功后将用户信息放到session中
-		// if (name.equals("fury") && password.equals("111111")) {
-		// request.getSession().setAttribute("userInfo", name + " - " + password);
-		// info = "login success";
-		// } else {
-		// info = "login failed";
-		// }
-		//
-		// System.out.println(info + ", Request Method = " + request.getMethod());
-		// return info;
+		
 	}
 
 	/**
