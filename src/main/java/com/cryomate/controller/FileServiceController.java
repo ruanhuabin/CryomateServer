@@ -50,11 +50,19 @@ public class FileServiceController
 	private static final int SUCCESS = 0;
 	private static final int FAILED = 1;
 
-	@RequestMapping("/test/cList_Dir")
+	@RequestMapping("/api/cList_Dir")
 	@ResponseBody
-	public List<FileInfo> listDir(HttpServletRequest request,
+	public List<FileInfo> listDir2(HttpServletRequest request,
 	                HttpServletResponse response) throws IOException
 	{
+		//Check whether the user is login
+		Users loginUser = (Users)request.getSession().getAttribute("userInfo");
+		if(loginUser == null)
+		{
+			response.getWriter().write("Error: No login user is found");
+			return null;
+		}		
+		
 		String dirPath = request.getParameter("pDirPath");
 		if (dirPath == null || dirPath.equals(""))
 		{
@@ -62,36 +70,27 @@ public class FileServiceController
 			                "Error: pDirPath is null or empty");
 			return null;
 		}
-
-		if (System.getProperty("os.name").toLowerCase()
-		                .indexOf("linux") >= 0
-		                && dirPath.charAt(0) != '/')
-		{
-			response.getWriter().write(
-			                "Error: pDirPath is not an absolute path");
-			return null;
-		}
-
+		
 		File fileDir = new File(dirPath);
-		if (!fileDir.exists())
+		if(!fileDir.exists())
 		{
-			System.out.println("Error: pDirPath [ " + dirPath
-			                + " ] is not exist");
-			response.getWriter().write("Error: pDirPath [ "
-			                + dirPath + " ] is not exist");
+			response.getWriter().write("Error: Directory does not exist");
+			return null;
+			
+		}
+		
+		//Check the owner of targeted dir is owned by the current login user
+		String userName = loginUser.getUserName();
+		FileUtils fu = new FileUtils();
+		CryomateFileAttribute cfa = fu.getFileAttr(dirPath);
+		String dirOwner = cfa.getOwner();
+		if(!userName.equals(dirOwner))
+		{
+			response.getWriter().write("Error: Perssion denied");
 			return null;
 		}
 		String[] files = fileDir.list();
-
-		// 若用户没有对该目录的读取权限，list方法会返回null
-		if (files == null)
-		{
-			response.getWriter().write("Error: Permission denied");
-			return null;
-		}
-
-		dirPath = dirPath + File.separator;
-		System.out.println("dir path = " + dirPath);
+		dirPath = dirPath + File.separator;		
 		List<FileInfo> fileArray = new ArrayList<FileInfo>();
 		SimpleDateFormat sdf = new SimpleDateFormat(
 		                "yyyy/MM/dd HH:mm:ss");
@@ -116,16 +115,13 @@ public class FileServiceController
 				fileInfo.setFileType("File");
 			}
 
-			String lastModifyTime = sdf
-			                .format(currFile.lastModified());
-
+			String lastModifyTime = sdf.format(currFile.lastModified());
 			fileInfo.setLastModifyTime(lastModifyTime);
 			fileArray.add(fileInfo);
 		}
 
 		return fileArray;
-
-	}
+	}	
 
 	@RequestMapping("/api/pDownload")
 	@ResponseBody

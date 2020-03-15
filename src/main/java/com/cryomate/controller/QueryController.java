@@ -686,7 +686,7 @@ public class QueryController {
 		//return success message for modify operation like insert, update, delete
 		if(result.length() == 0)
 		{
-			result.append("execute success").append('\n');
+			result.append("execute success");
 		}
 		return result.toString();		
 	}
