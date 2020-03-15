@@ -23,7 +23,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.cryomate.entity.Users;
+import com.cryomate.pojo.CryomateFileAttribute;
 import com.cryomate.pojo.FileInfo;
+import com.cryomate.utils.FileUtils;
 
 import java.nio.file.*;
 import java.nio.file.attribute.*;
@@ -294,7 +296,7 @@ public class FileServiceController
 		return SUCCCESS_ACCESS_OK;
 	}
 
-	@RequestMapping("/test/pUpload")
+	@RequestMapping("/api/pUpload")
 	@ResponseBody
 	public String uploadSingleFile(
 	                @RequestParam("pFile") MultipartFile file,
@@ -302,6 +304,15 @@ public class FileServiceController
 	                HttpServletRequest request,
 	                HttpServletResponse response)
 	{
+		Users currUser = (Users)request.getSession().getAttribute("userInfo");
+		if(currUser == null)
+		{
+			logger.info("Error: No login user is found");
+			return "Error: No login user is found";
+		}
+		
+		//Using user home dir as the base dir for the uploaded file
+		String uploadBaseDir = currUser.getHomeDir() + File.separatorChar;
 
 		if (file.isEmpty())
 		{
@@ -312,7 +323,7 @@ public class FileServiceController
 		logger.debug("upload file name：" + fileName);
 
 		// 文件上传后的路径
-		String filePath = uploadDir + File.separatorChar;
+		String filePath = uploadBaseDir + uploadDir + File.separatorChar;
 		String fileFullName = filePath + fileName;
 		File dest = new File(fileFullName);
 		logger.debug("File upload absolute path: {}",
@@ -326,15 +337,11 @@ public class FileServiceController
 		{
 			file.transferTo(dest);
 			//Change the owner of uploaded file to the login user
-			Users currUser = (Users)request.getSession().getAttribute("userInfo");
-			if(currUser == null)
-			{
-				logger.info("Error: No login user is found when starting to change owner of the uploaded file {}", fileFullName);
-				return "Success: upload success but no login user is found";
-			}
+			
 			String currLoginUserName = currUser.getUserName();
 			String currLoginUserGroup = currUser.getUserGroup();
-			int ret = changeFileOwner(fileFullName, currLoginUserName, currLoginUserGroup);
+			FileUtils fu = new FileUtils();
+			int ret = fu.changeFileOwnerGroup(fileFullName, currLoginUserName, currLoginUserGroup);
 			if(ret == SUCCESS)
 			{
 				logger.info("Success: Change owner of file {} to {} success", fileFullName, currLoginUserName);
@@ -354,24 +361,7 @@ public class FileServiceController
 		return "upload failed";
 	}
 
-	private int changeFileOwner(String fileFullName, String currLoginUserName, String currLoginUserGroup) throws IOException
-	{
-//		Path path = Paths.get(fileFullName);	    
-//	    UserPrincipalLookupService lookupService = FileSystems.getDefault()
-//	        .getUserPrincipalLookupService();
-//	    UserPrincipal userPrincipal = lookupService.lookupPrincipalByName(currLoginUserName);
-//
-//	    Files.setOwner(path, userPrincipal);
-		
-		Path file = Paths.get(fileFullName);		
-		UserPrincipal userPrincipal = file.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByName(currLoginUserName);
-		GroupPrincipal group =  file.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByGroupName(currLoginUserGroup);
-		PosixFileAttributeView fileAttributeView = Files.getFileAttributeView(file, PosixFileAttributeView.class);
-		fileAttributeView.setOwner(userPrincipal);
-		fileAttributeView.setGroup(group);	   
-		
-		return SUCCESS;
-	}
+	
 
 	@RequestMapping("/test/pMergeFiles")
 	@ResponseBody
@@ -419,8 +409,6 @@ public class FileServiceController
 		String outputFileNameFullPath = dstFileDir + File.separatorChar + dstFileName;
 		logger.debug("outputFileNameFullPath = " + outputFileNameFullPath);
 		
-		//check user permission
-		Users user = (Users)request.getSession().getAttribute("userInfo");
 		
 		/* ....... */
 		//check all files in srcFileList can be found.
@@ -432,59 +420,37 @@ public class FileServiceController
 				return "Error: File [ " + fileName + " ] does not exist";
 			}
 		}
+		
+		//check the owner of all the files belong to current login user
+		Users user = (Users)request.getSession().getAttribute("userInfo");
+		if(user == null)
+		{	
+			logger.info("Error: No login user is found");
+			return "Error: No login user is found";
+		}
+		String currOwner = user.getUserName();
+		String currGroup = user.getUserGroup();
+		FileUtils fileUtil = new FileUtils();
+		for(String fileName: srcFileNamesFullPath)
+		{
+			CryomateFileAttribute cfa = fileUtil.getFileAttr(fileName);
+			String owner = cfa.getOwner();
+			String group = cfa.getGroup();
+			if(!currOwner.equals(owner) || !currGroup.equals(group))
+			{
+				return "Error: The owner or group of file [ " + fileName  + " ] is not the current login user [ " + currOwner + " , " + currGroup + " ]";
+			}
+			
+		}
 		//merge files
-		mergeFiles(outputFileNameFullPath, srcFileNamesFullPath);
-		
-		//change owner and group of the merged file
-		
-		
+		fileUtil.mergeFiles(outputFileNameFullPath, srcFileNamesFullPath);		
+	    //change owner and group of the merged file
+		fileUtil.changeFileOwnerGroup(outputFileNameFullPath, currOwner, currGroup);		
 		//return the full path of the merged file
-
 		return "Merge Success";
 	}
 	
-	private int mergeFiles(String outputFileNameFullPath, String[] srcFileNames) throws IOException
-	{
-		File ofile = new File(outputFileNameFullPath);
-		if(ofile.exists())
-		{
-			ofile.delete();
-			ofile.createNewFile();
-		}
-		
-		FileOutputStream fos;
-		FileInputStream fis;
-		byte[] fileBytes;
-		int bytesRead = 0;
-		List<File> list = new ArrayList<File>();
-		for(String fileName: srcFileNames)
-		{
-			list.add(new File(fileName));
-		}
-		
-		try {
-		    fos = new FileOutputStream(ofile,true);
-		    
-		    for (File file : list) {
-		        fis = new FileInputStream(file);
-		        fileBytes = new byte[(int) file.length()];
-		        bytesRead = fis.read(fileBytes, 0,(int)  file.length());
-		        assert(bytesRead == fileBytes.length);
-		        assert(bytesRead == (int) file.length());
-		        fos.write(fileBytes);
-		        fos.flush();
-		        fileBytes = null;
-		        fis.close();
-		        fis = null;
-		    }
-		    fos.close();
-		    fos = null;
-		}catch (Exception exception){
-			exception.printStackTrace();
-			return FAILED;
-		}
-		return SUCCESS;
-	}
+	
 
 	@RequestMapping(value = "/test/batch/upload", method = RequestMethod.POST)
 	public @ResponseBody String uploadMultipleFiles(
@@ -525,5 +491,18 @@ public class FileServiceController
 		}
 		return "上传成功";
 	}
+	
+	@RequestMapping("/test/funTest")
+	@ResponseBody
+	public String funTest( HttpServletRequest request,
+						   HttpServletResponse response) throws IOException
+	{
+		String fileNameFullPath = request.getParameter("pParaString");
+		FileUtils fu = new FileUtils();
+		CryomateFileAttribute cfa = fu.getFileAttr(fileNameFullPath);
+		
+		return cfa.toString();
+	}
+	
 
 }
