@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cryomate.entity.Users;
 import com.cryomate.model.User;
+import com.cryomate.pojo.Constant;
 //import com.cryomate.repository.UserRepository;
 import com.cryomate.repository.UsersRepository;
 import com.cryomate.utils.CommandRunner;
@@ -23,6 +24,7 @@ import javax.servlet.http.HttpSession;
 @RequestMapping(value = "/user")
 public class LoginController {
 
+	
 	@Value("${cryomate.user.homedir.prefix}")
 	private String userHomeDirPrefix;
 	@Value("${cryomate.user.datadir.prefix}")
@@ -241,7 +243,7 @@ public class LoginController {
 		}
 		String currUserAuthority = currUser.getAuthority();
 
-		if (currUserAuthority != null && currUserAuthority.equals("admin")) {
+		if (currUserAuthority != null && currUserAuthority.equals(Constant.SysRoot)) {
 			Users u = new Users();
 			u.setUserName(name);
 			userRepos.delete(u);

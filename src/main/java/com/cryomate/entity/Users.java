@@ -25,13 +25,15 @@ public class Users {
 	private String homeDir;
 	private String workDir;
 	private String dataDir;
+	private String email;
+	private String phone;
 	
 	
 	public Users() {
 		
 	}
 	public Users(String userName, String password, String group, String authority, String dateAdd, String dateExp,
-			String homeDir, String workDir, String dataDir) {
+			String homeDir, String workDir, String dataDir, String email, String phone) {
 		super();
 		this.userName = userName;
 		this.password = password;
@@ -42,6 +44,8 @@ public class Users {
 		this.homeDir = homeDir;
 		this.workDir = workDir;
 		this.dataDir = dataDir;
+		this.email = email;
+		this.phone = phone;
 	}
 	
 	@Id	
@@ -126,12 +130,36 @@ public class Users {
 	}
 	
 	
-	@Override
-	public String toString() {
-		return "Users [userName=" + userName + ", password=" + password + ", group=" + userGroup + ", authority="
-				+ authority + ", dateAdd=" + dateAdd + ", dateExp=" + dateExp + ", homeDir=" + homeDir + ", workDir="
-				+ workDir + ", dataDir=" + dataDir + "]";
+	@Column(name="Email")
+	public String getEmail()
+	{
+		return email;
 	}
+	public void setEmail(String email)
+	{
+		this.email = email;
+	}
+	
+	@Column(name="Phone")
+	public String getPhone()
+	{
+		return phone;
+	}
+	public void setPhone(String phone)
+	{
+		this.phone = phone;
+	}
+	@Override
+	public String toString()
+	{
+		return "Users [userName=" + userName + ", password=" + password
+		        + ", userGroup=" + userGroup + ", authority=" + authority
+		        + ", dateAdd=" + dateAdd + ", dateExp=" + dateExp + ", homeDir="
+		        + homeDir + ", workDir=" + workDir + ", dataDir=" + dataDir
+		        + ", email=" + email + ", phone=" + phone + "]";
+	}
+	
+	
 	
 	
 
