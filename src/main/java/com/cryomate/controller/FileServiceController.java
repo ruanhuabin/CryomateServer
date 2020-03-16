@@ -86,11 +86,12 @@ public class FileServiceController
 		//Check the owner of targeted dir is owned by the current login user
 		String userName = loginUser.getUserName();
 		FileUtils fu = new FileUtils();
-		CryomateFileAttribute cfa = fu.getFileAttr(dirPath);
-		String dirOwner = cfa.getOwner();
+		String dirOwner = fu.getFileOwner(dirPath);
+		//CryomateFileAttribute cfa = fu.getFileAttr(dirPath);
+		//String dirOwner = cfa.getOwner();
 		if(!userName.equals(dirOwner))
 		{
-			logger.info("login user:{}, dir owner: {}", userName, dirOwner);
+			logger.info("login user:{}, dir owner is: {}", userName, dirOwner);
 			response.getWriter().write(Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Error: Perssion denied");
 			return null;
 		}
