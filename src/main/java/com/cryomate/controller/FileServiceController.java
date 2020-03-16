@@ -130,7 +130,7 @@ public class FileServiceController
 		return fileArray;
 	}	
 
-	@RequestMapping("/api/pDownload")
+	@RequestMapping("/api/cDownload")
 	@ResponseBody
 	public String downloadFile(HttpServletRequest request,
 	                HttpServletResponse response) throws IOException
@@ -299,7 +299,7 @@ public class FileServiceController
 		return SUCCCESS_ACCESS_OK;
 	}
 
-	@RequestMapping("/api/pUpload")
+	@RequestMapping("/api/cUpload")
 	@ResponseBody
 	public String uploadSingleFile(
 	                @RequestParam("pFile") MultipartFile file,
@@ -366,7 +366,7 @@ public class FileServiceController
 
 	
 
-	@RequestMapping("/api/pMergeFiles")
+	@RequestMapping("/api/cMergeFiles")
 	@ResponseBody
 	public String mergeFiles(@RequestParam("pSrcFileDir") String srcFileDir,
 							 @RequestParam("pSrcFileList") String[] srcFileList,
