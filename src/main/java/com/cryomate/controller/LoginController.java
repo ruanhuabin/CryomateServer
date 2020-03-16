@@ -91,13 +91,13 @@ public class LoginController {
 			retMessage.append("pDataDir:" + user.getDataDir() + "\n");
 			retMessage.append("pEmail:" + user.getEmail() + "\n");
 			retMessage.append("pPhone:" + user.getPhone() + "\n");
-			retMessage.append("login success");		
+			retMessage.append("pStatus:login success");		
 			
 			return retMessage.toString();		
 			
 		} else
 		{
-			return "login failed";
+			return "pStatus:login failed";
 		}
 
 		
@@ -190,7 +190,7 @@ public class LoginController {
 		Users user = userRepos.getByUserName(userName);
 		if (user != null) {
 			StringBuffer retMsg = new StringBuffer();
-			retMsg.append("Register Failed：user [ ");
+			retMsg.append("pStatus:register failed:user [ ");
 			retMsg.append(userName);
 			retMsg.append(" ] is already exist");
 			System.out.println(retMsg.toString());
@@ -227,7 +227,7 @@ public class LoginController {
 		String result = CommandRunner.runCommand(command);
 		System.out.println(command[0] + ": running result: " + result.toString());
 
-		return "register success";
+		return "pStatus:register success";
 	}
 
 	@RequestMapping(value = "/cRemove")
@@ -236,12 +236,12 @@ public class LoginController {
 		String name = request.getParameter("pUserName");
 
 		if (name == null) {
-			return "Error: user name is null";
+			return "pStatus:Error: user name is null";
 		}
 
 		Users user = userRepos.getByUserName(name);
 		if (user == null) {
-			return "Error: user [ " + name + " ] is not exist";
+			return "pStatus:Error: user [ " + name + " ] is not exist";
 		}
 
 		System.out.println("-------->User [ " + name + " ] is exist");
@@ -251,17 +251,17 @@ public class LoginController {
 		// We can not remove ourself
 		if (currUser != null && currUser.getUserName().equals(name)) {
 			System.out.println("self delete self");
-			return "Error: user [ " + currUser.getUserName() + " ] can't not be removed by himself";
+			return "pStatus:Error: user [ " + currUser.getUserName() + " ] can't not be removed by himself";
 		}
 		String currUserAuthority = currUser.getAuthority();
 
-		if (currUserAuthority != null && currUserAuthority.equals(Constant.SysRoot)) {
+		if (currUserAuthority != null && currUserAuthority.equals(Constant.AUTHORITY_SYSTEM_ROOT)) {
 			Users u = new Users();
 			u.setUserName(name);
 			userRepos.delete(u);
-			return "remove user success";
+			return "pStatus:remove success";
 		} else {
-			return "Error: permission denied";
+			return "pStatus:Error: permission denied";
 		}
 
 	}

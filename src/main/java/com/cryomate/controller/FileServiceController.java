@@ -6,6 +6,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.cryomate.entity.Users;
+import com.cryomate.pojo.Constant;
 import com.cryomate.pojo.CryomateFileAttribute;
 import com.cryomate.pojo.FileInfo;
 import com.cryomate.utils.FileUtils;
@@ -52,29 +55,30 @@ public class FileServiceController
 
 	@RequestMapping("/api/cList_Dir")
 	@ResponseBody
-	public List<FileInfo> listDir2(HttpServletRequest request,
-	                HttpServletResponse response) throws IOException
+	public List<FileInfo> listDir2(HttpServletRequest request,	
+	                HttpServletResponse response) throws IOException, URISyntaxException
 	{
 		//Check whether the user is login
 		Users loginUser = (Users)request.getSession().getAttribute("userInfo");
 		if(loginUser == null)
 		{
-			response.getWriter().write("Error: No login user is found");
+			response.getWriter().write(Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Error: No login user is found");
 			return null;
 		}		
 		
-		String dirPath = request.getParameter("pDirPath");
+		String dirPath = request.getParameter("pParaString");
 		if (dirPath == null || dirPath.equals(""))
 		{
-			response.getWriter().write(
-			                "Error: pDirPath is null or empty");
+			response.getWriter().write(Constant.HTTP_RTN_TEXT_RESULT_PREFIX + 
+			                "Error: pParaString is null or empty");
 			return null;
 		}
 		
-		File fileDir = new File(dirPath);
+		File fileDir = new File(dirPath);		
+		logger.info("dir path: {}, absolute path: {}", dirPath, fileDir.getAbsolutePath());
 		if(!fileDir.exists())
 		{
-			response.getWriter().write("Error: Directory does not exist");
+			response.getWriter().write(Constant.HTTP_RTN_TEXT_RESULT_PREFIX + " Error: Directory does not exist");
 			return null;
 			
 		}
@@ -86,7 +90,8 @@ public class FileServiceController
 		String dirOwner = cfa.getOwner();
 		if(!userName.equals(dirOwner))
 		{
-			response.getWriter().write("Error: Perssion denied");
+			logger.info("login user:{}, dir owner: {}", userName, dirOwner);
+			response.getWriter().write(Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Error: Perssion denied");
 			return null;
 		}
 		String[] files = fileDir.list();
@@ -120,6 +125,7 @@ public class FileServiceController
 			fileArray.add(fileInfo);
 		}
 
+		//response.getWriter().write(Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "\n");
 		return fileArray;
 	}	
 

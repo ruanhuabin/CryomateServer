@@ -3,6 +3,7 @@ package com.cryomate;
 //import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -131,32 +132,21 @@ public class HelloWorld {
 		
 	}
 
-	public static void main(String[] args) 
+	public static void main(String[] args) throws IOException 
 	{
-		// TODO Auto-generated method stub
-		int num = 4096;
-		String str = Integer.toBinaryString(num);
-		System.out.println(str);
+		File f = new File("/root");
+		System.out.println("abso path: " + f.getAbsolutePath());
+		System.out.println("can path: " + f.getCanonicalPath());
 		
-		
-		HelloWorld hwWorld = new HelloWorld();
-		List<String>  resultList = hwWorld.splitStringFromEnd(str, 5);
-		
-		for (Iterator<String> iterator = resultList.iterator(); iterator.hasNext();) {
-			String string = (String) iterator.next();
-			int num2 = Integer.parseUnsignedInt(string, 2);
-			System.out.println(string + " --> " + num2);
-			
+		if(f.exists())
+		{
+			System.out.println("/tmp exists");
+		}
+		else
+		{
+			System.out.println("/tmp does not exist");
 		}
 		
-		//long time = System.currentTimeMillis();
-		//String aaString = Long.toBinaryString(time);
-		//System.out.println(aaString);
-			
-        for (int i = 0; i < 100; i++) 
-        {
-            System.out.println(hwWorld.getNextID2());			
-        }
 	}
 
 }

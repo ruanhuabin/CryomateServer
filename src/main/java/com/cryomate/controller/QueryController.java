@@ -2,6 +2,8 @@ package com.cryomate.controller;
 
 import org.apache.tomcat.jni.OS;
 import org.aspectj.weaver.ast.Var;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import java.io.BufferedInputStream;
@@ -31,6 +33,7 @@ import java.util.UUID;
 import com.fasterxml.uuid.Generators;
 import com.cryomate.entity.Tables;
 import com.cryomate.entity.Users;
+import com.cryomate.pojo.Constant;
 import com.cryomate.repository.TablesRepository;
 import com.cryomate.utils.CommandRunner;
 
@@ -42,9 +45,8 @@ import com.cryomate.utils.KeyGenerator;
 
 @Controller
 @RequestMapping("/")
-public class QueryController {
-	//@Autowired
-	//private Job2DClassificationRepository job2DRepository;
+public class QueryController {	
+	private static final Logger logger = LoggerFactory.getLogger(FileServiceController.class);
 
 	@Autowired
 	private TablesRepository tablesRepository;
@@ -73,7 +75,7 @@ public class QueryController {
 		
 		String result = CommandRunner.runCommand(command);
 		
-		return result;
+		return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + result;
 		
 	
 	}
@@ -532,97 +534,7 @@ public class QueryController {
 
     }
 
-	@RequestMapping("/api/orig/cDisp_2DClass")
-	@ResponseBody
-	public String get2DClass(HttpServletRequest request, HttpServletResponse response) {
-		String pParaString = request.getParameter("pParaString");
-		String pID = request.getParameter("pID");
-		String pRound = request.getParameter("pRound");
-		String sNormalized = request.getParameter("sNormalized");
-		String pSTD = request.getParameter("pSTD");
-		String sRaw = request.getParameter("sRaw");
 
-		String outputTarFileName = "2DClass.tar";
-		File file = gen2DClassTarFile(outputTarFileName);
-
-		String fileNameToDownload = request.getParameter("filename");
-		// System.out.println("===>file name: " + fileNameToDownload);
-
-		if (file.exists()) {
-			response.setContentType("application/force-download");// 设置强制下载不打开
-			response.addHeader("Content-Disposition", "attachment;fileName=" + outputTarFileName);// 设置文件名
-			byte[] buffer = new byte[1024];
-			FileInputStream fis = null;
-			BufferedInputStream bis = null;
-			try {
-				fis = new FileInputStream(file);
-				bis = new BufferedInputStream(fis);
-				OutputStream os = response.getOutputStream();
-				int i = bis.read(buffer);
-				while (i != -1) {
-					os.write(buffer, 0, i);
-					i = bis.read(buffer);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				if (bis != null) {
-					try {
-						bis.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				if (fis != null) {
-					try {
-						fis.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-
-		return "data send success";
-	}
-
-//	@RequestMapping("/api/execSQL")
-//	@ResponseBody
-//	public String execSQL(HttpServletRequest request, HttpServletResponse response) {
-//		UserExample employee = null;
-//		List<UserExample> list = new ArrayList();
-//		Connection conn = null;
-//		PreparedStatement ps = null;
-//		ResultSet result = null;
-//		String sql = "select * from users";
-//		try {
-//			// 创建连接
-//			conn = JDBCUtils.getConnetions();
-//			// 创建prepareStatement对象，用于执行SQL
-//			ps = conn.prepareStatement(sql);
-//			// 获取查询结果集
-//			result = ps.executeQuery();
-//			while (result.next()) {
-//				// employee = new
-//				// User(result.getInt(1),result.getString(2),result.getString(3));
-//				employee = new UserExample();
-//				employee.setId(result.getInt(1));
-//				employee.setFirstName(result.getString(2));
-//				employee.setLastName(result.getString(3));
-//				list.add(employee);
-//
-//				System.out.printf("user id = %d, firstname = %s, lastname = %s\n", employee.getId(),
-//						employee.getFirstName(), employee.getLastName());
-//			}
-//			System.out.println("list = " + list);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		} finally {
-//			JDBCUtils.release(result, ps, conn);
-//		}
-//
-//		return null;
-//	}
 
 	@RequestMapping("/api/cSQL_Command")
 	@ResponseBody
@@ -632,7 +544,7 @@ public class QueryController {
 		
 		if(sql == null || sql == "")
 		{
-			return "Error: sql statement is empty";
+			return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Error: sql statement is empty";
 		}
 		
 		String command[] = new String[2];
@@ -664,7 +576,7 @@ public class QueryController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("====================>execute failed1");
-			return "command executes failed";
+			return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "command executes failed";
 		} finally {
 			try {
 				bufrIn.close();
@@ -673,7 +585,7 @@ public class QueryController {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				System.out.println("====================>execute failed2");
-				return "command executes failed";
+				return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "close input buffer or error buffer failed";
 			}
 
 			// 销毁子进程
@@ -688,7 +600,7 @@ public class QueryController {
 		{
 			result.append("execute success");
 		}
-		return result.toString();		
+		return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + result.toString();		
 	}
 	
 	@RequestMapping("/api/cSQL_Tables")
@@ -723,18 +635,16 @@ public class QueryController {
 				result.append(line).append('\n');
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("====================>execute failed1");
-			return "command executes failed";
+			e.printStackTrace();			
+			return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Error: command executes failed";
 		} finally {
 			try {
 				bufrIn.close();
 				bufrError.close();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
-				System.out.println("====================>execute failed2");
-				return "command executes failed";
+				e.printStackTrace();				
+				return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Error: close input/error buffer failed";
 			}
 
 			// 销毁子进程
@@ -747,9 +657,9 @@ public class QueryController {
 		//return success message for modify operation like insert, update, delete
 		if(result.length() == 0)
 		{
-			result.append("execute success").append('\n');
+			result.append("execute success");
 		}
-		return result.toString();		
+		return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + result.toString();		
 	}
 	
 	@RequestMapping("/api/cSQL_Columns")
@@ -759,7 +669,7 @@ public class QueryController {
 		String tableName = request.getParameter("pDBTable");
 		if(tableName == null || tableName == "")
 		{
-			return "Error: Table name is not specified by key pDBTable";
+			return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Error: Table name is not specified by key pDBTable";
 		}
 		String command[] = new String[2];
 		command[0] = "./warehouse/script/getTableColumns.sh";
@@ -789,18 +699,16 @@ public class QueryController {
 				result.append(line).append('\n');
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("====================>execute failed1");
-			return "command executes failed";
+			e.printStackTrace();			
+			return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Error: command executes failed";
 		} finally {
 			try {
 				bufrIn.close();
 				bufrError.close();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
-				System.out.println("====================>execute failed2");
-				return "command executes failed";
+				e.printStackTrace();				
+				return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Error: close input/error buffer failed";
 			}
 
 			// 销毁子进程
@@ -813,9 +721,9 @@ public class QueryController {
 		//return success message for modify operation like insert, update, delete
 		if(result.length() == 0)
 		{
-			result.append("execute success").append('\n');
+			result.append("execute success");
 		}
-		return result.toString();		
+		return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + result.toString();		
 	}
 
 
@@ -825,7 +733,7 @@ public class QueryController {
     {
         String ID = KeyGenerator.getNextID();
 
-        return ID;
+        return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + ID;
     }
 	
 	@RequestMapping("/api/cGen_DBID")
@@ -836,8 +744,8 @@ public class QueryController {
 		
 		if(tableName == null || tableName.equals(""))
 		{
-			System.out.println("Error: Parameter [pDBTable] is null or empty");
-			return "Error: Parameter [pDBTable] is null or empty";
+			logger.info("Error: Parameter [pDBTable] is null or empty");
+			return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Error: Parameter [pDBTable] is null or empty";
 		}
 		
 		
@@ -851,7 +759,7 @@ public class QueryController {
         String ID = KeyGenerator.getNextID();
         String dbID = tableIndex + "_" + ID;
 
-        return dbID;
+        return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + dbID;
     }
 	
 	@RequestMapping("/api/cGet_Time")
@@ -862,7 +770,7 @@ public class QueryController {
 		LocalDateTime now = LocalDateTime.now();  
 		String currTime = dtf.format(now);
 		
-		return "Time=\"" + currTime + "\"";
+		return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Time=\"" + currTime + "\"";
 		
 	}
 	
