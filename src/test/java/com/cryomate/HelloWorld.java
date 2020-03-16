@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.cryomate.pojo.CryomateFileAttribute;
+import com.cryomate.utils.FileUtils;
+
 //import org.apache.logging.log4j.message.StringFormatterMessageFactory;
 //import org.springframework.context.support.StaticApplicationContext;
 
@@ -134,18 +137,9 @@ public class HelloWorld {
 
 	public static void main(String[] args) throws IOException 
 	{
-		File f = new File("/root");
-		System.out.println("abso path: " + f.getAbsolutePath());
-		System.out.println("can path: " + f.getCanonicalPath());
-		
-		if(f.exists())
-		{
-			System.out.println("/tmp exists");
-		}
-		else
-		{
-			System.out.println("/tmp does not exist");
-		}
+		FileUtils fu = new FileUtils();
+		CryomateFileAttribute cfa = fu.getFileAttr("/Share/UserHome/fury");
+		System.out.println("Ower: " + cfa.getOwner());
 		
 	}
 
