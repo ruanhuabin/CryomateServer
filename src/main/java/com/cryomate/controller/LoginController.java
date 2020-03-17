@@ -6,9 +6,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cryomate.entity.Users;
-import com.cryomate.model.User;
 import com.cryomate.pojo.Constant;
-//import com.cryomate.repository.UserRepository;
 import com.cryomate.repository.UsersRepository;
 import com.cryomate.utils.CommandRunner;
 
@@ -115,9 +113,9 @@ public class LoginController {
 	@RequestMapping(value = "/cLogout")
 	@ResponseBody
 	public String logout(HttpServletRequest request) {
-		String info = "登出操作";
-		System.out.println(info);
+		String info;		
 		HttpSession session = request.getSession();
+		String currLoginUserName = ((Users)session.getAttribute("userInfo")).getUserName();
 
 		// 将用户信息从session中删除
 		session.removeAttribute("userInfo");
@@ -128,7 +126,8 @@ public class LoginController {
 		} else {
 			info = "logout failed";
 		}
-		System.out.println(info);
+		//System.out.println(info);
+		logger.info("User [ {} ] logout success", currLoginUserName);
 
 		return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + info;
 
