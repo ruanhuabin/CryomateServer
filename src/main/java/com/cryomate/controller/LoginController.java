@@ -24,9 +24,7 @@ import javax.servlet.http.HttpSession;
 @RequestMapping(value = "/api")
 public class LoginController {
 	private static final Logger logger = LoggerFactory
-            .getLogger(LoginController.class);
-
-	
+            .getLogger(LoginController.class);	
 	@Value("${cryomate.user.homedir.prefix}")
 	private String userHomeDirPrefix;
 	@Value("${cryomate.user.datadir.prefix}")
@@ -35,45 +33,28 @@ public class LoginController {
 	private String workDirPrefix;
 
 	@Autowired
-	UsersRepository userRepos;
-
-	@RequestMapping(value = "/test01")
-	@ResponseBody
-	public String test01() {
-		String info = "测试01";
-		System.out.println(info);
-		return info;
-	}
-
-	@RequestMapping(value = "/test02")
-	@ResponseBody
-	public String test02() {
-		String info = "test02";
-		System.out.println(info);
-		return info;
-	}
-
-	/**
-	 * 登录逻辑
-	 * 
-	 * @param name    用户名
-	 * @param pwd     用户密码
-	 * @param request
-	 * @return
-	 */
+	UsersRepository userRepos;	
 	@RequestMapping(value = "/cLogin")
 	@ResponseBody
 	public String login(HttpServletRequest request) {
 
 		String name = request.getParameter("pUserName");
 		String password = request.getParameter("pPassword");
-		String info = "登录逻辑";		
-		logger.info(info + ", Request Method = " + request.getMethod());
+		if(name == null || name.length() == 0)
+		{
+			return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Parameter pUserName is null or empty";
+		}
+		
+		if(password == null || password.length() == 0)
+		{
+			return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Parameter pPassword is null or empty";
+		}
+		
+		logger.info("User [ {} ] starts to login, request method: {}", name, request.getMethod());
 		
 		StringBuffer retMessage = new StringBuffer();
-
 		Users user = userRepos.findByUserNameAndPassword(name, password);
-		// 登录认证，认证成功后将用户信息放到session中
+		//Add user info into current session and construct return message
 		if (user != null)
 		{
 			request.getSession().setAttribute("userInfo", user);
