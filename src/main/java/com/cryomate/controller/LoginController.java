@@ -22,44 +22,49 @@ import javax.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping(value = "/api")
-public class LoginController {
+public class LoginController
+{
 	private static final Logger logger = LoggerFactory
-            .getLogger(LoginController.class);	
+	        .getLogger(LoginController.class);
 	@Value("${cryomate.user.homedir.prefix}")
-	private String userHomeDirPrefix;
+	private String              userHomeDirPrefix;
 	@Value("${cryomate.user.datadir.prefix}")
-	private String dataDirPrefix;
+	private String              dataDirPrefix;
 	@Value("${cryomate.user.workdir.prefix}")
-	private String workDirPrefix;
+	private String              workDirPrefix;
 
 	@Autowired
-	UsersRepository userRepos;	
+	UsersRepository             userRepos;
 	@RequestMapping(value = "/cLogin")
 	@ResponseBody
-	public String login(HttpServletRequest request) {
+	public String login(HttpServletRequest request)
+	{
 
 		String name = request.getParameter("pUserName");
 		String password = request.getParameter("pPassword");
-		if(name == null || name.length() == 0)
+		if (name == null || name.length() == 0)
 		{
-			return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Parameter pUserName is null or empty";
+			return Constant.HTTP_RTN_STATUS_RESULT_PREFIX
+			        + "Parameter pUserName is null or empty";
 		}
-		
-		if(password == null || password.length() == 0)
+
+		if (password == null || password.length() == 0)
 		{
-			return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Parameter pPassword is null or empty";
+			return Constant.HTTP_RTN_STATUS_RESULT_PREFIX
+			        + "Parameter pPassword is null or empty";
 		}
-		
-		logger.info("User [ {} ] starts to login, request method: {}", name, request.getMethod());
-		
+
+		logger.info("User [ {} ] starts to login, request method: {}", name,
+		        request.getMethod());
+
 		StringBuffer retMessage = new StringBuffer();
 		Users user = userRepos.findByUserNameAndPassword(name, password);
-		//Add user info into current session and construct return message
+		// Add user info into current session and construct return message
 		if (user != null)
 		{
 			request.getSession().setAttribute("userInfo", user);
 			logger.info("user [ " + name + " ] is valid");
-			
+
 			retMessage.append("pUserName:" + user.getUserName() + "\n");
 			retMessage.append("pUserGroup:" + user.getUserGroup() + "\n");
 			retMessage.append("pAuthority:" + user.getAuthority() + "\n");
@@ -70,44 +75,36 @@ public class LoginController {
 			retMessage.append("pDataDir:" + user.getDataDir() + "\n");
 			retMessage.append("pEmail:" + user.getEmail() + "\n");
 			retMessage.append("pPhone:" + user.getPhone() + "\n");
-			retMessage.append("pStatus:login success");		
-			
-			return retMessage.toString();		
-			
+			retMessage.append("pStatus:login success");
+
+			return retMessage.toString();
+
 		} else
 		{
 			return "pStatus:login failed";
 		}
 
-		
-		
-
-		
 	}
 
-	/**
-	 * 登出操作
-	 * 
-	 * @param request
-	 * @return
-	 */
 	@RequestMapping(value = "/cLogout")
 	@ResponseBody
-	public String logout(HttpServletRequest request) {
-		String info;		
+	public String logout(HttpServletRequest request)
+	{
+		String info;
 		HttpSession session = request.getSession();
-		String currLoginUserName = ((Users)session.getAttribute("userInfo")).getUserName();
-
-		// 将用户信息从session中删除
+		String currLoginUserName = ((Users) session.getAttribute("userInfo"))
+		        .getUserName();
+		
 		session.removeAttribute("userInfo");
-
 		Object userInfo = session.getAttribute("userInfo");
-		if (userInfo == null) {
+		if (userInfo == null)
+		{
 			info = "logout success";
-		} else {
+		} else
+		{
 			info = "logout failed";
 		}
-		//System.out.println(info);
+		
 		logger.info("User [ {} ] logout success", currLoginUserName);
 
 		return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + info;
@@ -116,38 +113,47 @@ public class LoginController {
 
 	@RequestMapping(value = "/cRegister")
 	@ResponseBody
-	public String register(HttpServletRequest request) {
+	public String register(HttpServletRequest request)
+	{
 		String userName = request.getParameter("pUserName");
 		String password = request.getParameter("pPassword");
-		//String email = request.getParameter("pEmail");
-		//String role = request.getParameter("pRole");
+		// String email = request.getParameter("pEmail");
+		// String role = request.getParameter("pRole");
 		String authority = request.getParameter("pAuthority");
 		String userGroup = request.getParameter("pUserGroup");
 		String dateAdd = request.getParameter("PDateAdd");
 		String dateExp = request.getParameter("pDateExp");
 
-		if (userGroup == null || userGroup.equals("")) {
+		if (userGroup == null || userGroup.equals(""))
+		{
 			userGroup = userName;
 		}
 
 		String userHomeDirPrefix;
-		if (this.userHomeDirPrefix.charAt(this.userHomeDirPrefix.length() - 1) != '/') {
+		if (this.userHomeDirPrefix
+		        .charAt(this.userHomeDirPrefix.length() - 1) != '/')
+		{
 			userHomeDirPrefix = this.userHomeDirPrefix + "/";
-		} else {
+		} else
+		{
 			userHomeDirPrefix = this.userHomeDirPrefix;
 		}
 
 		String dataDirPrefix;
-		if (this.dataDirPrefix.charAt(this.dataDirPrefix.length() - 1) != '/') {
+		if (this.dataDirPrefix.charAt(this.dataDirPrefix.length() - 1) != '/')
+		{
 			dataDirPrefix = this.dataDirPrefix + "/";
-		} else {
+		} else
+		{
 			dataDirPrefix = this.dataDirPrefix;
 		}
 
 		String workDirPrefix;
-		if (this.workDirPrefix.charAt(this.workDirPrefix.length() - 1) != '/') {
+		if (this.workDirPrefix.charAt(this.workDirPrefix.length() - 1) != '/')
+		{
 			workDirPrefix = this.workDirPrefix + "/";
-		} else {
+		} else
+		{
 			workDirPrefix = this.workDirPrefix;
 		}
 
@@ -158,7 +164,7 @@ public class LoginController {
 		StringBuffer strBuffer = new StringBuffer();
 		strBuffer.append("register operation:\n");
 		strBuffer.append("\tname:" + userName + "\n");
-		strBuffer.append("\tpassword:" + password + "\n");		
+		strBuffer.append("\tpassword:" + password + "\n");
 		strBuffer.append("\tauthority:" + authority + "\n");
 		strBuffer.append("\tworkGroup:" + userGroup + "\n");
 		strBuffer.append("\thomeDir:" + homeDir + "\n");
@@ -168,7 +174,8 @@ public class LoginController {
 
 		// Check whether user name is already used
 		Users user = userRepos.getByUserName(userName);
-		if (user != null) {
+		if (user != null)
+		{
 			StringBuffer retMsg = new StringBuffer();
 			retMsg.append("pStatus:register failed:user [ ");
 			retMsg.append(userName);
@@ -178,20 +185,22 @@ public class LoginController {
 
 		}
 		// insert new user into database
-		//User newUser = new User(name, password, email, userGroup, role, homeDir, workDir, dataDir);
+		// User newUser = new User(name, password, email, userGroup, role,
+		// homeDir, workDir, dataDir);
 		Users newUser = new Users();
-		newUser.setAuthority(authority);		
+		newUser.setAuthority(authority);
 		newUser.setDateAdd(dateAdd);
-		newUser.setDateExp(dateExp);		
+		newUser.setDateExp(dateExp);
 		newUser.setPassword(password);
 		newUser.setUserGroup(userGroup);
 		newUser.setUserName(userName);
 		newUser.setHomeDir(homeDir);
 		newUser.setDataDir(dataDir);
 		newUser.setWorkDir(workDir);
-		
+
 		userRepos.save(newUser);
-		System.out.println("Register: create new user " + userName + " success");
+		System.out
+		        .println("Register: create new user " + userName + " success");
 
 		// invoke script to create system user
 
@@ -205,42 +214,52 @@ public class LoginController {
 		command[6] = dataDir;
 
 		String result = CommandRunner.runCommand(command);
-		System.out.println(command[0] + ": running result: " + result.toString());
+		System.out
+		        .println(command[0] + ": running result: " + result.toString());
 
 		return "pStatus:register success";
 	}
 
 	@RequestMapping(value = "/cRemove")
 	@ResponseBody
-	public String remove(HttpServletRequest request) {
+	public String remove(HttpServletRequest request)
+	{
 		String name = request.getParameter("pUserName");
 
-		if (name == null) {
+		if (name == null)
+		{
 			return "pStatus:Error: user name is null";
 		}
 
 		Users user = userRepos.getByUserName(name);
-		if (user == null) {
+		if (user == null)
+		{
 			return "pStatus:Error: user [ " + name + " ] is not exist";
 		}
 
 		System.out.println("-------->User [ " + name + " ] is exist");
 
-		Users currUser = (Users) (request.getSession().getAttribute("userInfo"));
+		Users currUser = (Users) (request.getSession()
+		        .getAttribute("userInfo"));
 
 		// We can not remove ourself
-		if (currUser != null && currUser.getUserName().equals(name)) {
+		if (currUser != null && currUser.getUserName().equals(name))
+		{
 			System.out.println("self delete self");
-			return "pStatus:Error: user [ " + currUser.getUserName() + " ] can't not be removed by himself";
+			return "pStatus:Error: user [ " + currUser.getUserName()
+			        + " ] can't not be removed by himself";
 		}
 		String currUserAuthority = currUser.getAuthority();
 
-		if (currUserAuthority != null && currUserAuthority.equals(Constant.AUTHORITY_SYSTEM_ROOT)) {
+		if (currUserAuthority != null
+		        && currUserAuthority.equals(Constant.AUTHORITY_SYSTEM_ROOT))
+		{
 			Users u = new Users();
 			u.setUserName(name);
 			userRepos.delete(u);
 			return "pStatus:remove success";
-		} else {
+		} else
+		{
 			return "pStatus:Error: permission denied";
 		}
 
