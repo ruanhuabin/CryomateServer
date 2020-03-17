@@ -377,17 +377,17 @@ public class FileServiceController
 	{
 		if (srcFileDir == null || srcFileDir.length() == 0)
 		{
-			return "Error: Parameter [ pSrcFileDir ] is null or empty";
+			return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter [ pSrcFileDir ] is null or empty";
 		}
 
 		if (srcFileList == null || srcFileList.length == 0)
 		{
-			return "Error: Parameter [  pSrcFileList ] is null or empty";
+			return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter [  pSrcFileList ] is null or empty";
 		}
 		
 		if(dstFileName == null || dstFileName.length() == 0)
 		{
-			return "Error: Parameter [ pDstFileName ] is null or empty";
+			return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter [ pDstFileName ] is null or empty";
 		}
 
 		for (int i = 0; i < srcFileList.length; i++)
@@ -420,7 +420,7 @@ public class FileServiceController
 			File file = new File(fileName);
 			if(!file.exists())
 			{
-				return "Error: File [ " + fileName + " ] does not exist";
+				return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File [ " + fileName + " ] does not exist";
 			}
 		}
 		
@@ -429,7 +429,7 @@ public class FileServiceController
 		if(user == null)
 		{	
 			logger.info("Error: No login user is found");
-			return "Error: No login user is found";
+			return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: No login user is found";
 		}
 		String currOwner = user.getUserName();
 		String currGroup = user.getUserGroup();
@@ -441,7 +441,7 @@ public class FileServiceController
 			String group = cfa.getGroup();
 			if(!currOwner.equals(owner) || !currGroup.equals(group))
 			{
-				return "Error: The owner or group of file [ " + fileName  + " ] is not the current login user [ " + currOwner + " , " + currGroup + " ]";
+				return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: The owner or group of file [ " + fileName  + " ] is not the current login user [ " + currOwner + " , " + currGroup + " ]";
 			}
 			
 		}
@@ -450,7 +450,7 @@ public class FileServiceController
 	    //change owner and group of the merged file
 		fileUtil.changeFileOwnerGroup(outputFileNameFullPath, currOwner, currGroup);		
 		//return the full path of the merged file
-		return "Merge Success";
+		return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Merge Success";
 	}
 	
 	

@@ -37,18 +37,15 @@ import com.cryomate.repository.TablesRepository;
 import com.cryomate.utils.CommandRunner;
 
 //import com.cryomate.model.Job2DClassification;
-
 //import com.cryomate.repository.Job2DClassificationRepository;
-import com.cryomate.utils.JDBCUtils;
+
 import com.cryomate.utils.KeyGenerator;
 
 @Controller
 @RequestMapping("/")
 public class QueryController {	
-	private static final Logger logger = LoggerFactory.getLogger(FileServiceController.class);
-
+	private static final Logger logger = LoggerFactory.getLogger(QueryController.class);
 	private static final String ERROR_DB_TABLE_INDEX_IS_NOT_FOUND = null;
-
 	@Autowired
 	private TablesRepository tablesRepository;
 
