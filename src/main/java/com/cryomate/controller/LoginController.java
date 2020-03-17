@@ -114,7 +114,7 @@ public class LoginController {
 	 */
 	@RequestMapping(value = "/cLogout")
 	@ResponseBody
-	public String loginout(HttpServletRequest request) {
+	public String logout(HttpServletRequest request) {
 		String info = "登出操作";
 		System.out.println(info);
 		HttpSession session = request.getSession();
@@ -130,7 +130,7 @@ public class LoginController {
 		}
 		System.out.println(info);
 
-		return info;
+		return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + info;
 
 	}
 
