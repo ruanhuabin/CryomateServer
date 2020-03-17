@@ -266,6 +266,107 @@ public class FileServiceController
 		return null;
 	}
 
+
+	@RequestMapping("/api/cRemove_File")
+	@ResponseBody
+	public String RemoveFile(HttpServletRequest request,
+							 HttpServletResponse response) throws IOException {
+		String fileNameFullPath = request.getParameter("pParaString");
+		logger.debug("fileNameFullPath = {}", fileNameFullPath);
+
+		if (fileNameFullPath == null || fileNameFullPath.equals("")) {
+			return "pStatus: Error: pFileFullPath is null or empty";
+		}
+
+		int index = fileNameFullPath.lastIndexOf('/');
+		String fileName = fileNameFullPath.substring(index + 1);
+		String fileDir = fileNameFullPath.substring(0, index + 1);
+
+		logger.debug("fileDir = " + fileDir + ", fileName = " + fileName);
+
+		if (fileName != null) {
+			// 判断当前删除的文件的属主是否为当前登录用户
+			int checkResult = checkPermission(request, fileNameFullPath);
+			if (checkResult == ERROR_NO_LOGIN_USER_IS_FOUND) {
+				return "pStatus: Error: No login user is found";
+			} else if (checkResult == ERROR_OWNER_PERMISSION_DENIED) {
+				return "pStatus: Error: Current Login User is Forbidden to Accssess This File [ " + fileNameFullPath + " ]";
+			}
+			// 根据文件路径跟文件名查找文件
+			File file = new File(fileDir, fileName);
+			// 判断是否是文件再删除，只删除文件
+			if(file.exists() && file.isFile() && file.delete()) {
+				logger.debug("file deleted successfully: filePath [" + fileNameFullPath + "]");
+				return "pStatus: file deleted successfully";
+			} else if(file.exists() && file.isDirectory()) {
+				logger.debug("this is a directory: filePath  [" + fileNameFullPath + "]");
+				return "pStatus: this is a directory";
+			} else {
+				logger.debug("Error: File [ " + fileNameFullPath + " ] is not found ");
+				return "pStatus: Error: File [ " + fileNameFullPath + " ] is not found ";
+			}
+//          注释的可以根据文件路径删除文件夹跟文件
+//			if (file.exists() && !file.isDirectory()) {
+//				if(deleteFile(fileNameFullPath)) {
+//			        logger.debug("file deleted successfully: filePath [" + fileNameFullPath + "]");
+//					return "pStatus: file deleted successfully";
+//				}
+//			} else if(file.exists() && file.isDirectory()) {
+//				if(deleteDirectory(fileNameFullPath)){
+//			        logger.debug("file deleted successfully: filePath [" + fileNameFullPath + "]");
+//					return "pStatus: file deleted successfully";
+//				}
+//			} else {
+//			    logger.debug("Error: File [ " + fileNameFullPath + " ] is not found ");
+//				return "pStatus: Error: File [ " + fileNameFullPath + " ] is not found ";
+//			}
+		}
+		return "pStatus: delete fail";
+	}
+
+	/**
+	 * 递归删除文件夹
+	 * */
+	private boolean deleteDirectory(String sPath) {
+		if (!sPath.endsWith(File.separator)) {
+			sPath = sPath + File.separator;
+		}
+		File dirFile = new File(sPath);
+		if (!dirFile.exists() || !dirFile.isDirectory()) {
+			return false;
+		}
+		boolean flag = true;
+		File[] files = dirFile.listFiles();
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].isFile()) {
+				flag = deleteFile(files[i].getAbsolutePath());
+				if(!flag) { break; }
+			} //删除子目录
+			else {
+				flag = deleteDirectory(files[i].getAbsolutePath());
+				if(!flag) { break; }
+			}
+		}
+		if(!flag) { return false;}
+		//删除当前目录
+		if (dirFile.delete()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	/**
+	 * 删除文件
+	 * */
+	private boolean deleteFile(String sPath) {
+		File file = new File(sPath);
+		if (file.isFile() && file.exists()) {
+			file.delete();
+			return true;
+		}
+		return false;
+	}
+
 	private int checkPermission(HttpServletRequest request,
 	                String fileNameFullPath) throws IOException
 	{
