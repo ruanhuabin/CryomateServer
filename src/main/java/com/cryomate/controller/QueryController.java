@@ -607,10 +607,11 @@ public class QueryController {
 		}
 		
 		//return success message for modify operation like insert, update, delete
-		if(result.length() == 0)
-		{
-			result.append("execute success");
-		}
+		//Commented by suggestion of shenbo and lixueming
+//		if(result.length() == 0)
+//		{
+//			result.append("execute success");
+//		}
 		return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + result.toString();		
 	}
 	
@@ -684,10 +685,11 @@ public class QueryController {
 		}
 		
 		//return success message for modify operation like insert, update, delete
-		if(result.length() == 0)
-		{
-			result.append("execute success");
-		}
+		//Commented, suggested by shenbo and lixueming
+//		if(result.length() == 0)
+//		{
+//			result.append("execute success");
+//		}
 		return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + result.toString();		
 	}
 	
@@ -748,10 +750,11 @@ public class QueryController {
 		}
 		
 		//return success message for modify operation like insert, update, delete
-		if(result.length() == 0)
-		{
-			result.append("execute success");
-		}
+		//Commented ,suggested by shenbo and lixueming
+//		if(result.length() == 0)
+//		{
+//			result.append("execute success");
+//		}
 		return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + result.toString();		
 	}
 
