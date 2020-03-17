@@ -560,7 +560,7 @@ public class QueryController {
 		
 		String command[] = new String[2];
 		command[0] = "./warehouse/script/execSQL.sh";
-		command[1] = sql;	
+		command[1] = finalSQL;	
 
 		StringBuffer result = new StringBuffer();
 		Process process = null;
