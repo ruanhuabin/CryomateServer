@@ -6,3 +6,4 @@ target
 *.lst
 warehouse/imageDir
 logs
+nohup.out

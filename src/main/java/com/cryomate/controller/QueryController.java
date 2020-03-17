@@ -1,7 +1,6 @@
 package com.cryomate.controller;
 
-import org.apache.tomcat.jni.OS;
-import org.aspectj.weaver.ast.Var;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +46,8 @@ import com.cryomate.utils.KeyGenerator;
 @RequestMapping("/")
 public class QueryController {	
 	private static final Logger logger = LoggerFactory.getLogger(FileServiceController.class);
+
+	private static final String ERROR_DB_TABLE_INDEX_IS_NOT_FOUND = null;
 
 	@Autowired
 	private TablesRepository tablesRepository;
@@ -541,11 +542,24 @@ public class QueryController {
 	public String execSQLCommand(HttpServletRequest request, HttpServletResponse response) 
 	{
 		String sql = request.getParameter("pParaString");
+		String dbTable = request.getParameter("pDBTable");
 		
 		if(sql == null || sql == "")
 		{
 			return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Error: sql statement is empty";
 		}
+		
+		String finalSQL = sql;
+		if(dbTable != null && dbTable.length() > 0)
+		{
+			finalSQL = modifySQL(sql, dbTable);
+		}
+		if(finalSQL.equals(ERROR_DB_TABLE_INDEX_IS_NOT_FOUND))
+		{
+			logger.error("The corresponding TableIndex is not found when dbTable = {}", dbTable);
+			return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "Error: TableIndex is not found when pDBTable = " + dbTable;
+		}
+		logger.info("final sql to execute: {}", finalSQL);
 		
 		String command[] = new String[2];
 		command[0] = "./warehouse/script/execSQL.sh";
@@ -603,6 +617,24 @@ public class QueryController {
 		return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + result.toString();		
 	}
 	
+	private String modifySQL(String sql, String dbTable)
+	{
+		// TODO Auto-generated method stub
+		Tables t = tablesRepository.getByName(dbTable);
+		if(t == null)
+		{			
+			return ERROR_DB_TABLE_INDEX_IS_NOT_FOUND;
+		}
+		String tableIndex = t.getTableIndex();
+        String ID = KeyGenerator.getNextID();
+        String dbID = tableIndex + "_" + ID;
+        
+        logger.info("TableIndex + ID = {}", dbID);
+        String finalSQL = sql.replace("@@KeyID@@", dbID);
+		return finalSQL;
+	}
+
+
 	@RequestMapping("/api/cSQL_Tables")
 	@ResponseBody
 	public String getDatabaseTables(HttpServletRequest request, HttpServletResponse response) 
