@@ -625,7 +625,7 @@ public class QueryController {
 		}
 		String tableIndex = t.getTableIndex();
         String ID = KeyGenerator.getNextID();
-        String dbID = tableIndex + "_" + ID;
+        String dbID = tableIndex + ID;
         
         logger.info("TableIndex + ID = {}", dbID);
         String finalSQL = sql.replace("@@KeyID@@", dbID);
@@ -789,7 +789,7 @@ public class QueryController {
 		}
 		String tableIndex = t.getTableIndex();
         String ID = KeyGenerator.getNextID();
-        String dbID = tableIndex + "_" + ID;
+        String dbID = tableIndex + ID;
 
         return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + dbID;
     }

@@ -155,7 +155,7 @@ public class Jobs {
 		this.username = username;
 	}
 
-	@Column(name="DataAdd")
+	@Column(name="DateAdd")
 	public String getDateAdd() {
 		return dateAdd;
 	}

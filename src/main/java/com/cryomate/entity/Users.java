@@ -49,7 +49,7 @@ public class Users {
 	}
 	
 	@Id	
-	@Column(name="UserName")
+	@Column(name="Username")
 	public String getUserName() {
 		return userName;
 	}

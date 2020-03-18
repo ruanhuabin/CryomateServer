@@ -83,7 +83,7 @@ public class Pipelines {
 		SettingFile = settingFile;
 	}
 	
-	@Column(name="UserName")
+	@Column(name="Username")
 	public String getUsername() {
 		return Username;
 	}
