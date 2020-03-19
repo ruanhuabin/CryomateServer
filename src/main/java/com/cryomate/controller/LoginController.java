@@ -35,11 +35,11 @@ public class LoginController
     public String login(HttpServletRequest request)
     {
 
-        String name     = request.getParameter("pUserName");
+        String name     = request.getParameter("pUsername");
         String password = request.getParameter("pPassword");
         if (name == null || name.length() == 0)
         {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Parameter pUserName is null or empty";
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Parameter pUsername is null or empty";
         }
 
         if (password == null || password.length() == 0)
@@ -57,7 +57,7 @@ public class LoginController
             request.getSession().setAttribute("userInfo", user);
             logger.info("user [ " + name + " ] is valid");
 
-            retMessage.append("pUserName:" + user.getUserName() + "\n");
+            retMessage.append("pUsername:" + user.getUserName() + "\n");
             retMessage.append("pUserGroup:" + user.getUserGroup() + "\n");
             retMessage.append("pAuthority:" + user.getAuthority() + "\n");
             retMessage.append("pDataAdd:" + user.getDateAdd() + "\n");
@@ -106,7 +106,7 @@ public class LoginController
     @ResponseBody
     public String register(HttpServletRequest request)
     {
-        String userName  = request.getParameter("pUserName");
+        String userName  = request.getParameter("pUsername");
         String password  = request.getParameter("pPassword");
         String authority = request.getParameter("pAuthority");
         String userGroup = request.getParameter("pUserGroup");
@@ -210,20 +210,20 @@ public class LoginController
     @ResponseBody
     public String remove(HttpServletRequest request)
     {
-        String name = request.getParameter("pUserName");
+        String name = request.getParameter("pUsername");
 
-        if (name == null)
+        if (name == null || name.length() == 0)
         {
-            return "pStatus:Error: user name is null";
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX +  "Error: pUsername is null or empty";
         }
 
         Users user = userRepos.getByUserName(name);
         if (user == null)
         {
-            return "pStatus:Error: user [ " + name + " ] is not exist";
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: user [ " + name + " ] is not exist";
         }
-
-        System.out.println("-------->User [ " + name + " ] is exist");
+        
+        logger.info("remove user: user [{}] exists");
 
         Users currUser = (Users) (request.getSession().getAttribute("userInfo"));
 
@@ -231,7 +231,7 @@ public class LoginController
         if (currUser != null && currUser.getUserName().equals(name))
         {
             System.out.println("self delete self");
-            return "pStatus:Error: user [ " + currUser.getUserName() + " ] can't not be removed by himself";
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: user [ " + currUser.getUserName() + " ] can't not be removed by himself";
         }
         String currUserAuthority = currUser.getAuthority();
 
@@ -240,10 +240,10 @@ public class LoginController
             Users u = new Users();
             u.setUserName(name);
             userRepos.delete(u);
-            return "pStatus:remove success";
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "remove success";
         } else
         {
-            return "pStatus:Error: permission denied";
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: permission denied";
         }
 
     }
