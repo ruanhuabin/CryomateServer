@@ -106,15 +106,16 @@ public class DisplayController
         
         logger.info("stack file name: {}\n", pFilename);
 
-        String outputDir = this.tmpDirPrefix + 
+        String outputDir = Generators.timeBasedGenerator().generate().toString();
+        String outputDirFullPath = this.tmpDirPrefix + 
                            File.separatorChar + 
                            loginUserName + 
                            File.separatorChar + 
-                           Generators.timeBasedGenerator().generate().toString();
+                           outputDir;
         
-        logger.info("output dir: {}\n", outputDir);
+        logger.info("output dir: {}\n", outputDirFullPath);
 
-        String argumentString = "--input " + pFilename + " --output " + outputDir;
+        String argumentString = "--input " + pFilename + " --output " + outputDirFullPath;
 
         if (sNormalized != null)
         {
@@ -184,7 +185,7 @@ public class DisplayController
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Failed to generate Image [ detail:  " + result + " ]";
         }
 
-        File tarFile = compressImageDir(outputDir, outputDir + ".tar");
+        File tarFile = compressImageDir(outputDirFullPath, outputDir, outputDirFullPath + ".tar");
 
         logger.info("Compressed full full path: {}", tarFile.getAbsoluteFile());
         transferToClient(response, tarFile);
@@ -193,9 +194,10 @@ public class DisplayController
 
     }
     
-    private File compressImageDir(String dirToBeCompressed, String outputTarFileName)
+    private File compressImageDir(String dirFullPathToBeCompressed, String dirToBeCompressed, String outputTarFileName)
     {        
         File file = new File(outputTarFileName);
+        
         if (!file.getParentFile().exists())
         {
             file.getParentFile().mkdirs();
