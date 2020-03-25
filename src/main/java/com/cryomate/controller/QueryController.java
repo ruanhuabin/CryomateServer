@@ -155,7 +155,7 @@ public class QueryController
 
         if (pID == "" || pID == null)
         {
-            return "Error: pID is not set";
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pID is not set";
         }
 
         if (pRound == "" || pRound == null)
@@ -165,25 +165,25 @@ public class QueryController
 
         if (sNormalized != null && sNormalized.length() == 0 && sJPEG != null && sJPEG.length() == 0)
         {
-            return "Error: Parameter sNormalized and sJPEG should not set simultaneously from client.";
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sNormalized and sJPEG should not set simultaneously from client.";
         }
 
         if (sRAW != null && sMRC != null)
         {
 
-            return "Error: Parameter sRAW and sMRC should not set simultaneously from client.";
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sRAW and sMRC should not set simultaneously from client.";
         }
 
         if (sJPEG != null && sMRC != null)
         {
 
-            return "Error: Parameter sJPEG and sMRC should not set simultaneously from client.";
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sMRC should not set simultaneously from client.";
         }
 
         if (sJPEG != null && sRAW != null)
         {
 
-            return "Error: Parameter sJPEG and sRAW should not set simultaneously from client.";
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sRAW should not set simultaneously from client.";
         }
 
         String mrcsFileName = "Reference_Round_" + pRound + ".mrcs";

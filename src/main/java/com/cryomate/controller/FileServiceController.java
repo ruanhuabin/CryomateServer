@@ -79,9 +79,9 @@ public class FileServiceController
 		if(!fileDir.exists())
 		{
 			response.getWriter().write(Constant.HTTP_RTN_TEXT_RESULT_PREFIX + " Error: Directory does not exist");
-			return null;
-			
+			return null;			
 		}
+		
 		
 		//Check the owner of targeted dir is owned by the current login user
 		String userName = loginUser.getUserName();
@@ -440,8 +440,7 @@ public class FileServiceController
 		try
 		{
 			file.transferTo(dest);
-			//Change the owner of uploaded file to the login user
-			
+			//Change the owner of uploaded file to the login user			
 			String currLoginUserName = currUser.getUserName();
 			String currLoginUserGroup = currUser.getUserGroup();
 			FileUtils fu = new FileUtils();
@@ -452,7 +451,7 @@ public class FileServiceController
 			}
 			else
 			{
-				logger.info("Failed: Change owner of file {} to {} success", fileFullName, currLoginUserName);
+				logger.info("Failed: Change owner of file {} to {} failed", fileFullName, currLoginUserName);
 			}
 			return "upload success";
 		} catch (IllegalStateException e)
