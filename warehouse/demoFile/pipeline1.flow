@@ -1,0 +1,341 @@
+{
+    "1": {
+        "1": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 250,
+                    "Green": 100,
+                    "Red": 10
+                },
+                "Name": "Data Import"
+            },
+            "Script": "dataimport",
+            "Version": "1.1",
+            "WaitList": [
+                "0,0"
+            ]
+        },
+        "2": {
+            "Cs(mm)": 2.7,
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 100,
+                    "Green": 100,
+                    "Red": 100
+                },
+                "Name": "Global Para"
+            },
+            "Magnification": 80000,
+            "Pixel Size(A)": 1.32,
+            "Version": "0.0",
+            "Voltage(kV)": 300,
+            "WaitList": [
+                "0,0"
+            ]
+        }
+    },
+    "10": {
+        "1": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 200,
+                    "Green": 0,
+                    "Red": 200
+                },
+                "Name": "2D Classify (THU)"
+            },
+            "Number of Classes": 100,
+            "Script": "thunder_gpu",
+            "Version": "1.1",
+            "WaitList": [
+                "9,1",
+                "7,2",
+                "1,2"
+            ]
+        }
+    },
+    "11": {
+        "1": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 240,
+                    "Green": 90,
+                    "Red": 100
+                },
+                "Name": "3D Refine (THU)"
+            },
+            "Script": "thunder_gpu",
+            "Version": "1.1",
+            "WaitList": [
+                "10,1",
+                "7,2",
+                "1,2"
+            ]
+        }
+    },
+    "12": {
+        "1": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 100,
+                    "Green": 20,
+                    "Red": 200
+                },
+                "Name": "3D Classify (THU)"
+            },
+            "Number of Classes": 5,
+            "Script": "thunder_gpu",
+            "Version": "1.1",
+            "WaitList": [
+                "11,1",
+                "7,2",
+                "1,2"
+            ]
+        }
+    },
+    "13": {
+        "1": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 240,
+                    "Green": 90,
+                    "Red": 100
+                },
+                "Name": "3D Refine (THU)"
+            },
+            "Script": "thunder_gpu",
+            "Version": "1.1",
+            "WaitList": [
+                "12,1",
+                "7,2",
+                "1,2"
+            ]
+        }
+    },
+    "2": {
+        "1": {
+            "Database File": "database.db",
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 0,
+                    "Green": 0,
+                    "Red": 200
+                },
+                "Name": "Data Pool"
+            },
+            "Version": "1.1",
+            "WaitList": [
+                "1,1",
+                "1,2"
+            ]
+        }
+    },
+    "3": {
+        "1": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 50,
+                    "Green": 200,
+                    "Red": 50
+                },
+                "Name": "Job Triger"
+            },
+            "Script": "jobtriger",
+            "Version": "1.1",
+            "WaitList": [
+                "2,1",
+                "1,2"
+            ]
+        }
+    },
+    "4": {
+        "1": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 10,
+                    "Green": 200,
+                    "Red": 10
+                },
+                "Name": "Motion Corr2"
+            },
+            "Script": "MotionCorr2",
+            "Version": "1.1",
+            "WaitList": [
+                "3,1",
+                "1,2"
+            ]
+        },
+        "2": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 200,
+                    "Green": 0,
+                    "Red": 200
+                },
+                "Name": "Compress BZ2"
+            },
+            "Script": "pbz2",
+            "Version": "1.1",
+            "WaitList": [
+                "3,1"
+            ]
+        }
+    },
+    "5": {
+        "1": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 100,
+                    "Green": 200,
+                    "Red": 100
+                },
+                "Name": "CTFFind 4"
+            },
+            "HT": 300,
+            "PixelSize": 1.32,
+            "Script": "ctffind4",
+            "Version": "4.1",
+            "WCG": 0.1,
+            "WaitList": [
+                "4,1",
+                "1,2"
+            ]
+        },
+        "2": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 225,
+                    "Green": 200,
+                    "Red": 100
+                },
+                "Name": "Particle Picking"
+            },
+            "Script": "deeppicker",
+            "Version": "1.1",
+            "WaitList": [
+                "4,1",
+                "1,2"
+            ]
+        }
+    },
+    "6": {
+        "1": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 80,
+                    "Green": 200,
+                    "Red": 250
+                },
+                "Name": "Particle Boxer"
+            },
+            "Script": "mrc_cut",
+            "Version": "1.1",
+            "WaitList": [
+                "5,1",
+                "5,2",
+                "1,2"
+            ]
+        }
+    },
+    "7": {
+        "1": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 250,
+                    "Green": 100,
+                    "Red": 10
+                },
+                "Name": "Data Import"
+            },
+            "Script": "dataimport",
+            "Matching": "stack_*.mrcs",
+            "IsWatching": true,
+            "HasExisted": false,
+            "RunPath":null,
+            "FileSize": 0,
+            "Version": "1.1",
+            "WaitList": [
+                "6,1",
+                "1,2"
+            ]
+        },
+        "2": {
+            "Cs(mm)": 2.7,
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 100,
+                    "Green": 100,
+                    "Red": 100
+                },
+                "Name": "Global Para"
+            },
+            "Magnification": 80000,
+            "Pixel Size(A)": 1.32,
+            "Version": "0.0",
+            "Voltage(kV)": 300,
+            "WaitList": [
+                "0,0"
+            ]
+        }
+    },
+    "8": {
+        "1": {
+            "Database File": "database.db",
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 0,
+                    "Green": 0,
+                    "Red": 200
+                },
+                "Name": "Data Pool"
+            },
+            "Version": "1.1",
+            "WaitList": [
+                "7,1",
+                "7,2"
+            ]
+        }
+    },
+    "9": {
+        "1": {
+            "Element Define": {
+                "Color": {
+                    "Alpha": 255,
+                    "Blue": 50,
+                    "Green": 200,
+                    "Red": 50
+                },
+                "Name": "Job Triger"
+            },
+            "Script": "jobtrigger",
+            "Version": "1.1",
+            "Batch" : 100,
+           "DataTimeout": 3600,
+           "JobTimeout": 3600,
+           "Parallel": 4,
+           "RunPath":"id001",
+            "WaitList": [
+                "8,1",
+                "7,2",
+                "1,2"
+            ]
+        }
+    },
+    "Config Path": "Modules/"
+}
