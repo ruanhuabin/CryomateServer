@@ -57,7 +57,7 @@ public class PipelineController
         }
         // 获取文件名
         String fileName = file.getOriginalFilename();
-        logger.debug("upload file name：" + fileName);
+        logger.debug("uploaded flow file name：" + fileName);
 
         // 文件上传后的路径
         String ID = KeyGenerator.getNextID();
@@ -70,7 +70,6 @@ public class PipelineController
         if (!dest.getParentFile().exists())
         {
             dest.getParentFile().mkdirs();
-            //logger.info("Make dir [{}] success.", dest.getParentFile().getAbsolutePath());
         }
         
         try
@@ -95,9 +94,16 @@ public class PipelineController
                 logger.info("Failed: Change owner of file {} to {} failed", fileFullName, currLoginUserName);
             }
             
+            //Run yaku to get the running command.
+
+            //Run the pipeline program bracer or kannshi through bash script
+            //The bash script will firstly ssh to loginnode and then 
+            //submit a job the cluster by sbatch bracer.slurm | kannshi.slurm
+            // or by sbatch misaka xxx.flow
+            //
             //Start to parse the json data in flow file
-            String flowContentStr = new String(flowContent);
-            logger.debug("flow file content: {}", flowContentStr);
+            //String flowContentStr = new String(flowContent);
+            //logger.debug("flow file content: {}", flowContentStr);
            /*
             JSONObject obj1 = new JSONObject(flowContentStr);
             Iterator<String> keys = obj1.keys();
