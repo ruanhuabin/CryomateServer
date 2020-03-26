@@ -135,7 +135,7 @@ public class FileServiceController
 	public String downloadFile(HttpServletRequest request,
 	                HttpServletResponse response) throws IOException
 	{
-		String fileNameFullPath = request.getParameter("pFileFullPath");
+		String fileNameFullPath = request.getParameter("pFilename");
 		String offsetStr = request.getParameter("pOffset");
 		String lengthStr = request.getParameter("pLength");
 
@@ -156,7 +156,7 @@ public class FileServiceController
 
 		if (fileNameFullPath == null || fileNameFullPath.equals(""))
 		{
-			return "Error: pFileFullPath is null or empty";
+			return "Error: pFilename is null or empty";
 		}
 
 		int index = fileNameFullPath.lastIndexOf('/');
