@@ -22,6 +22,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cryomate.pojo.Constant;
 import com.cryomate.pojo.CryomateFileAttribute;
 
 public class FileUtils
@@ -126,7 +127,7 @@ public class FileUtils
 	}
 	
 	@SuppressWarnings({"unchecked", "rawtypes"})
-    public static String genDataFromFSCFile(String fileName) throws IOException
+    public String genDataFromFSCFile(String fileName) throws IOException
     {
         FileReader fr = new FileReader(fileName);
         BufferedReader br = new BufferedReader(fr);
@@ -141,18 +142,18 @@ public class FileUtils
         {
             sb[i] = new StringBuffer();
         }
-        sb[0].append("x:");
-        for(int i = 1; i < columnNum; i ++)
-        {
-            sb[i].append("y" + i + ":");
-        }
+//        sb[0].append("x:");
+//        for(int i = 1; i < columnNum; i ++)
+//        {
+//            sb[i].append("y" + i + ":");
+//        }
         
         while(line != null)
         {
             String columns[] = line.split(" +");            
             for(int i = 0; i < columnNum; i ++)
             {
-                sb[i].append(columns[i] + ",");
+                sb[i].append(columns[i] + "\t");
             }
             line = br.readLine();
         }
@@ -170,12 +171,12 @@ public class FileUtils
         //Remove the last ',' in the end of each sb[i], and append sb[i] to new string buffer used as final return string
         for(int i = 0; i < columnNum; i ++)
         {
-            sb[i].setCharAt(sb[i].length() - 1, '\n');
+            sb[i].setCharAt(sb[i].length() - 1, ';');
             finalValue.append(sb[i]);
         }
         //Remove the last '\n'
         finalValue.setCharAt(finalValue.length() - 1, '\0');
-        return finalValue.toString();
+        return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + finalValue.toString();
     }
 	
 	
