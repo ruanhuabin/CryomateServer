@@ -46,6 +46,42 @@ public class DisplayController
         return display(request, response);
     }
     
+    @RequestMapping("/api/cDisp_FSC")
+    @ResponseBody    
+    public String cDisplayFSC(HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        String pFilename = request.getParameter("pFilename"); 
+        //This parameter is reserved for future use
+        String pTextDataFormat = request.getParameter("pTextDataFormat");
+        if(pFilename == null || pFilename.length() == 0)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pFilename is null or empty";
+        }
+        
+        //Make sure the file exists
+        File file = new File(pFilename);
+        if(!file.exists())
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File [ " + pFilename + " ] does not exist";
+        }
+        
+        //Make sure the owner of the being processed file is the login user.
+        Users loginUser = (Users)request.getSession().getAttribute("userInfo");
+        String loginUserName = loginUser.getUserName();
+        FileUtils fu = new FileUtils();
+        String fileOwner = fu.getFileOwner(pFilename);
+        if(!loginUserName.equals(fileOwner))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File " + pFilename + " ] does not belong to current login user!";
+        }  
+        
+        String fscInfo = fu.genDataFromFSCFile(pFilename);
+        
+        return fscInfo;      
+        
+    }
+    
+    
     
     private String display(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
