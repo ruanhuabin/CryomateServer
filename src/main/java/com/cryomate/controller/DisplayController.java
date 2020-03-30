@@ -81,6 +81,181 @@ public class DisplayController
         
     }
     
+    @RequestMapping("/api/cDisp_3DMap")
+    @ResponseBody   
+    public String cDisplay3DMap(HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        String pFilename   = request.getParameter("pFilename");
+        String sNormalized = request.getParameter("sNormalized");
+        String pMean       = request.getParameter("pMean");
+        String pStd        = request.getParameter("pStd");
+        String sRAW        = request.getParameter("sRAW");
+        String sMRC        = request.getParameter("sMRC");
+        String sJPEG       = request.getParameter("sJPEG");
+        String pAxis       = request.getParameter("pAxis");
+        String pSlice      = request.getParameter("pSlice");
+        
+        logger.info("pFilename = {}, sNormalized = {}, sRaw = {}, sMRC = {}, sJPEG = {}, pMean = {}, pStd = {}, pAxis = {}, pSlice = {}\n",
+                pFilename, sNormalized, sRAW, sMRC, sJPEG, pMean, pStd, pAxis, pSlice);
+        
+        if (pFilename == "" || pFilename == null)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pFilename is null or empty";
+        }
+        
+        //Make sure the file exists
+        File file = new File(pFilename);
+        if(!file.exists())
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File [ " + pFilename + " ] does not exist";
+        }
+        
+        //Make sure the owner of the being processed file is the login user.
+        Users loginUser = (Users)request.getSession().getAttribute("userInfo");
+        String loginUserName = loginUser.getUserName();
+        FileUtils fu = new FileUtils();
+        String fileOwner = fu.getFileOwner(pFilename);
+        if(!loginUserName.equals(fileOwner))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File " + pFilename + " ] does not belong to current login user!";
+        }        
+
+        if (sNormalized != null && sNormalized.length() == 0 && sJPEG != null && sJPEG.length() == 0)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sNormalized and sJPEG should not set simultaneously from client.";
+        }
+
+        if (sRAW != null && sMRC != null)
+        {
+
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sRAW and sMRC should not set simultaneously from client.";
+        }
+
+        if (sJPEG != null && sMRC != null)
+        {
+
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sMRC should not set simultaneously from client.";
+        }      
+        
+
+        if (sJPEG != null && sRAW != null)
+        {
+
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sRAW should not set simultaneously from client.";
+        } 
+        
+        if(sJPEG == null && sRAW == null && sMRC == null)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG, sRAW, sMRC should not set null simultaneously";
+        }
+        
+        //sMRC or sRAW should come with sNormalized != null
+        if(sNormalized == null && (sMRC != null || sRAW != null))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: sMRC or sRAW should go with sNormalized";
+        }
+        
+        
+        
+        logger.info("stack file name: {}\n", pFilename);
+
+        String outputDir = Generators.timeBasedGenerator().generate().toString();
+        String outputDirFullPath = this.tmpDirPrefix + 
+                           File.separatorChar + 
+                           loginUserName + 
+                           File.separatorChar + 
+                           outputDir;
+        
+        logger.info("output dir: {}\n", outputDirFullPath);
+
+        String argumentString = "--input " + pFilename + " --output " + outputDirFullPath;
+
+        if (sNormalized != null)
+        {
+            argumentString = argumentString + " --sNormalized";
+        }
+
+        if (sRAW != null)
+        {
+            argumentString = argumentString + " --sRAW";
+        }
+
+        if (sMRC != null)
+        {
+            argumentString = argumentString + " --sMRC";
+        }
+
+        if (sJPEG != null)
+        {
+            argumentString = argumentString + "  --sJPEG";
+        }
+
+        if (pMean != null)
+        {
+            argumentString = argumentString + " --pMean " + pMean;
+        } else
+        {
+            argumentString = argumentString + " --pMean 0";
+        }
+
+        if (pStd != null)
+        {
+            argumentString = argumentString + " --pStd " + pStd;
+        } else
+        {
+            if (sNormalized == null)
+            {
+                argumentString = argumentString + " --pStd 1";
+            } else
+            {
+                argumentString = argumentString + " --pStd 3";
+            }
+        }
+
+        if(pAxis == null)
+        {
+            pAxis = "z";            
+        }
+        if(pSlice == null)
+        {
+            pSlice = "0";
+        }
+        argumentString = argumentString + " --pAxis " + pAxis + " --pSlice " + pSlice;
+        logger.info("Argument String = {}\n", argumentString);
+
+        String paraItems[] = argumentString.split(" ");
+        System.out.println("length of paraItems: " + paraItems.length);
+
+        String command[] = new String[paraItems.length + 1];
+        command[0] = "warehouse/bin/cDisp_3DMap";
+
+        for (int i = 0; i < paraItems.length; i++)
+        {
+            command[i + 1] = paraItems[i].trim();
+        }
+
+        System.out.println("-->command to be executed:");
+        for (String item : command)
+        {
+            System.out.print(item + " ");
+        }
+        System.out.println();
+
+        String result = CommandRunner.runCommand(command);
+        if (result.length() != 0)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Failed to generate Image [ detail:  " + result + " ]";
+        }
+
+        File tarFile = compressImageDir(outputDirFullPath, outputDir, outputDirFullPath + ".tar");
+
+        logger.info("Compressed file full path: {}", tarFile.getAbsoluteFile());
+        transferToClient(response, tarFile);
+
+        return null;
+        
+        
+    }
     
     
     private String display(HttpServletRequest request, HttpServletResponse response) throws IOException

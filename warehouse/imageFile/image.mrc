@@ -1,0 +1,1 @@
+stack_0190_DW_8x.mrc

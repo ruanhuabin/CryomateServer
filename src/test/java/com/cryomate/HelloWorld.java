@@ -248,8 +248,13 @@ public class HelloWorld {
 //	        System.out.println();
 //	    }
 	    
-	    String sb = foo2("/root/file/fsc-files/FSC_Final.txt");
-	    System.out.println(sb);
+	    
+
+	    File f = new File("/root/stack.mrc");
+	    System.out.println("file length = " + f.length());
+	    
+	    
+	    
 		
 	}
 
