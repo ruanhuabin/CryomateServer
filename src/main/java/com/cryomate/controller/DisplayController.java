@@ -88,7 +88,7 @@ public class DisplayController
         String pFilename   = request.getParameter("pFilename");
         String sNormalized = request.getParameter("sNormalized");
         String pMean       = request.getParameter("pMean");
-        String pStd        = request.getParameter("pStd");
+        String pStd        = request.getParameter("pSTD");
         String sRAW        = request.getParameter("sRAW");
         String sMRC        = request.getParameter("sMRC");
         String sJPEG       = request.getParameter("sJPEG");
@@ -263,7 +263,7 @@ public class DisplayController
         String pFilename = request.getParameter("pFilename");        
         String sNormalized = request.getParameter("sNormalized");
         String pMean       = request.getParameter("pMean");
-        String pStd        = request.getParameter("pStd");
+        String pStd        = request.getParameter("pSTD");
         String sRAW        = request.getParameter("sRAW");
         String sMRC        = request.getParameter("sMRC");
         String sJPEG       = request.getParameter("sJPEG");
