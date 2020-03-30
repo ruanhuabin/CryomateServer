@@ -208,7 +208,7 @@ public class DisplayController
                 argumentString = argumentString + " --pStd 1";
             } else
             {
-                argumentString = argumentString + " --pStd 3";
+                argumentString = argumentString + " --pStd 5";
             }
         }
 
@@ -379,7 +379,7 @@ public class DisplayController
                 argumentString = argumentString + " --pStd 1";
             } else
             {
-                argumentString = argumentString + " --pStd 3";
+                argumentString = argumentString + " --pStd 5";
             }
         }
 

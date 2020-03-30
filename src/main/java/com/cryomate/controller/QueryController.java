@@ -232,7 +232,7 @@ public class QueryController
                 argumentString = argumentString + " --pStd 1";
             } else
             {
-                argumentString = argumentString + " --pStd 3";
+                argumentString = argumentString + " --pStd 5";
             }
         }
 
