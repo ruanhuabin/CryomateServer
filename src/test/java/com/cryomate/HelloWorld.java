@@ -2,18 +2,24 @@ package com.cryomate;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 
 //import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import com.cryomate.pojo.CryomateFileAttribute;
 import com.cryomate.utils.FileUtils;
@@ -232,26 +238,45 @@ public class HelloWorld {
         finalValue.setCharAt(finalValue.length() - 1, '\0');
         return finalValue.toString();
     }
+	
+	
+	public void genTextFiles(Vector<String> fileNames, String outputFileNameFullPath) throws IOException
+	{
+	    StringBuffer sb = new StringBuffer();
+	    for(String fileName: fileNames)
+	    {
+	        sb.append(fileName + ":");
+	        FileReader fr = new FileReader(fileName);
+	        BufferedReader br = new BufferedReader(fr);
+	        String line = br.readLine();
+	        while(line != null)
+	        {	            
+	            sb.append(line + ";");
+	            line = br.readLine();
+	        }
+	        sb.setCharAt(sb.length() - 1, '\n');
+	        br.close();
+	        fr.close();	        
+	    }
+	    
+	    
+	    
+	    FileWriter fw = new FileWriter(outputFileNameFullPath);
+	    BufferedWriter bw = new BufferedWriter(fw);
+	    bw.write(sb.toString());
+	    bw.close();
+	    fw.close();
+	}
 
 	public static void main(String[] args) throws IOException 
 	{
-	
-//	    Vector[] v = foo("/root/file/fsc-files/FSC_Final.txt");
-//	    for(int i = 0; i < v.length; i ++)
-//	    {
-//	        System.out.printf("v[%d]: %d:", i, v[i].size());
-////	        for(int j = 0; j < v[i].size(); j ++)
-////	        {
-////	            System.out.print(" " + v[i].get(j));
-////	        }
-//	        System.out.print(v[i]);
-//	        System.out.println();
-//	    }
-	    
-	    
-
-	    File f = new File("/root/stack.mrc");
-	    System.out.println("file length = " + f.length());
+	    FileFilter fileFilter = new WildcardFileFilter("a*.txt");
+	    File dir = new File("/root/testdir/");
+	    File[] files = dir.listFiles(fileFilter);
+	    for(int i = 0; i < files.length; i ++)
+	    {
+	        System.out.printf("files[%d] = %s\n", i, files[i].getName());
+	    }
 	    
 	    
 	    

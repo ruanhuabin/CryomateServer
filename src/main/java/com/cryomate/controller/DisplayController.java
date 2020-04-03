@@ -2,15 +2,22 @@ package com.cryomate.controller;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -79,6 +86,14 @@ public class DisplayController
         
         return fscInfo;      
         
+    }
+    
+    private String getLoginUserName(HttpServletRequest request)
+    {
+        Users loginUser = (Users)request.getSession().getAttribute("userInfo");
+        String loginUserName = loginUser.getUserName();
+        
+        return loginUserName;
     }
     
     @RequestMapping("/api/cDisp_3DMap")
@@ -257,6 +272,373 @@ public class DisplayController
         
     }
     
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @RequestMapping("/api/cDisp_MultiStack")
+    @ResponseBody   
+    public String cDispMultiStack(HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        String pPath       = request.getParameter("pPath");
+        String pFileFilter = request.getParameter("pFileFilter");
+        String pAll        = request.getParameter("pAll");
+        String sNormalized = request.getParameter("sNormalized");
+        String pMean       = request.getParameter("pMean");
+        String pStd        = request.getParameter("pSTD");
+        String sRAW        = request.getParameter("sRAW");
+        String sMRC        = request.getParameter("sMRC");
+        String sJPEG       = request.getParameter("sJPEG");
+        
+        String ret = checkDirectory(request, pPath); 
+        if(ret != null)
+        {
+            return ret;
+        }
+        
+        if(pFileFilter == null || pFileFilter == "")
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pFileFilter is null or empty";
+        }
+        
+        if(pAll == null || pAll == "")
+        {
+            pAll = "-1";
+        }
+        
+        if(!pAll.equals("-1") && !pAll.equals("1") && ! pAll.equals("1"))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pAll value should be -1, 0, or 1";
+        }
+        
+        String argumentString = "";
+        String loginUserName = getLoginUserName(request);
+        String outputDir = Generators.timeBasedGenerator().generate().toString();
+        String outputDirFullPath = this.tmpDirPrefix + 
+                           File.separatorChar + 
+                           loginUserName + 
+                           File.separatorChar + 
+                           outputDir;
+        if(!pAll.contentEquals("0"))
+        {
+            if (sNormalized != null && sNormalized.length() == 0 && sJPEG != null && sJPEG.length() == 0)
+            {
+                return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sNormalized and sJPEG should not set simultaneously from client.";
+            }
+
+            if (sRAW != null && sMRC != null)
+            {
+
+                return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sRAW and sMRC should not set simultaneously from client.";
+            }
+
+            if (sJPEG != null && sMRC != null)
+            {
+
+                return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sMRC should not set simultaneously from client.";
+            }      
+            
+
+            if (sJPEG != null && sRAW != null)
+            {
+
+                return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sRAW should not set simultaneously from client.";
+            } 
+            
+            if(sJPEG == null && sRAW == null && sMRC == null)
+            {
+                return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG, sRAW, sMRC should not set null simultaneously";
+            }
+            
+            //sMRC or sRAW should come with sNormalized != null
+            if(sNormalized == null && (sMRC != null || sRAW != null))
+            {
+                return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: sMRC or sRAW should go with sNormalized";
+            }
+            
+            
+            logger.info("output dir: {}\n", outputDirFullPath);
+
+            argumentString = "--output " + outputDirFullPath;
+
+            if (sNormalized != null)
+            {
+                argumentString = argumentString + " --sNormalized";
+            }
+
+            if (sRAW != null)
+            {
+                argumentString = argumentString + " --sRAW";
+            }
+
+            if (sMRC != null)
+            {
+                argumentString = argumentString + " --sMRC";
+            }
+
+            if (sJPEG != null)
+            {
+                argumentString = argumentString + "  --sJPEG";
+            }
+
+            if (pMean != null)
+            {
+                argumentString = argumentString + " --pMean " + pMean;
+            } else
+            {
+                argumentString = argumentString + " --pMean 0";
+            }
+
+            if (pStd != null)
+            {
+                argumentString = argumentString + " --pStd " + pStd;
+            } else
+            {
+                if (sNormalized == null)
+                {
+                    argumentString = argumentString + " --pStd 1";
+                } else
+                {
+                    argumentString = argumentString + " --pStd 5";
+                }
+            }
+            
+        }
+        
+        //List dir
+        String[] filters = pFileFilter.split(";");
+        for(int i = 0; i < filters.length; i ++)
+        {
+            logger.info("filter string [{}] : {}", i, filters[i]);
+        }
+        
+        File dir = new File(pPath);
+        Vector[] fileLists = new Vector[filters.length];        
+        //Save file name list in fileLists, format: filterString:filename1;filename2;filename3;filenameN;
+        for(int i = 0; i < filters.length; i ++)
+        {
+            fileLists[i] = new Vector();
+            //fileLists[i].add(filters[i] + ":");
+            FileFilter fileFilter = new WildcardFileFilter(filters[i]);
+            
+            File[] files = dir.listFiles(fileFilter);
+            for (int j = 0; j < files.length; j++) 
+            {
+               fileLists[i].add(files[j].getName());
+            }
+            
+            logger.info("Filter [{}]  -->: {}", filters[i], fileLists[i]);
+            fileLists[i].sort(null);
+        }
+        //Construct file list as string
+        StringBuffer sbFileList = new StringBuffer();        
+        for(int i = 0; i < fileLists.length; i ++)
+        {
+            sbFileList.append(filters[i] + ":");
+            for(int j = 0; j < fileLists[i].size() - 1; j ++)
+            {
+                sbFileList.append((String)fileLists[i].get(j) + ";");
+            }
+            if(fileLists[i].size() > 0)
+            {
+                sbFileList.append((String)fileLists[i].get(fileLists[i].size() - 1) + "\n");
+            }
+        }
+        if(pAll.contentEquals("-1"))
+        {
+            //We suppose mrc files are in fileList[0], other text file are in fileLists[1...N]
+            if(fileLists[0].size() > 0)
+            {
+                Vector<String> mrcFiles = new Vector<String>();
+                getMRCFiles(mrcFiles, pPath, fileLists[0]);
+                logger.info("Those mrc files will be used to generate jpeg/mrc/raw: {}", mrcFiles);
+                String result = genBinaryData(mrcFiles, argumentString);
+                logger.info("Gen jpeg|mrc|raw complete, return msg: {}", result);
+            }
+            
+            //Generate text return file
+            for(int i = 1; i < fileLists.length; i ++)
+            {
+                logger.info("Text fileLists[{}] = {}", i, fileLists[i]);
+                if(fileLists[i].size() > 0)
+                {
+                    Vector<String> textFiles = new Vector<String>();
+                    getTextFiles(textFiles, pPath, fileLists[i]);
+                    logger.info("Those text files will be used to generate return message: {}", textFiles);
+                    genTextDataToFiles(textFiles, outputDirFullPath + File.separatorChar + "rtn_string.txt");
+                }                
+                //genTextFiles(fileNames, outputFileNameFullPath);
+            }
+            
+//            genTextData();
+//            compressData();
+//            transfterToClient();
+            
+            //transferLastImageFile();
+        }
+        else if(pAll.contentEquals("1"))
+        {
+            if(fileLists[0].size() > 0)
+            { 
+                Vector<String> mrcFiles = new Vector<String>();
+                for(Object f: fileLists[0])
+                {
+                    String fileName = (String)f;                    
+                    fileName = pPath + File.separatorChar + fileName;
+                    mrcFiles.add(fileName);                   
+                }
+                
+            }
+            
+            //transferAllImageFile();
+        }
+        else if(pAll.contentEquals("0"))
+        {
+            //transferNoImageFile();
+        }
+        return "success";
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void getMRCFiles(Vector<String> targetMRCFiles, String pPath, Vector files)
+    {
+        // TODO Auto-generated method stub
+        String pathPrefix = pPath + File.separatorChar;
+        boolean isFinalExist = false;
+        for(Object f: files)
+        {
+            String fileName = (String)f;
+            if(fileName.contains("_Final.mrc"))
+            {
+                targetMRCFiles.add(pathPrefix + File.separatorChar + fileName);
+                isFinalExist = true;
+                break;
+            }
+        }
+        
+        if(!isFinalExist)
+        {
+            targetMRCFiles.add(pathPrefix + (String)files.get(files.size() - 1));
+        }   
+                
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void getTextFiles(Vector<String> targetTextFiles, String pPath, Vector files)
+    {
+        // TODO Auto-generated method stub
+        String pathPrefix = pPath + File.separatorChar;
+        boolean isFinalExist = false;
+        for(Object f: files)
+        {
+            String fileName = (String)f;
+            if(fileName.contains("_Final"))
+            {
+                targetTextFiles.add(pathPrefix + File.separatorChar + fileName);
+                isFinalExist = true;
+                break;
+            }
+        }
+        
+        if(!isFinalExist)
+        {
+            targetTextFiles.add(pathPrefix + (String)files.get(files.size() - 1));
+        }   
+                
+    }
+    private String genBinaryData(Vector<String> fileToBeGenData, String argumentString)
+    {
+        // TODO Auto-generated method stub
+        String result = "";
+        for(String f: fileToBeGenData)
+        {
+            int a = f.lastIndexOf('/') + 1;
+            int b = f.lastIndexOf(".mrc");
+            String prefix = f.substring(a,b);
+            argumentString = argumentString + " --input " + f + " --prefix " + prefix;            
+            String paraItems[] = argumentString.split(" ");
+            String[] command = new String[paraItems.length + 1];
+            command[0] = "./warehouse/bin/mrcs2jpeg";
+            logger.info("Program: {}, Argument String : {}", command[0], argumentString);
+            for (int i = 0; i < paraItems.length; i++)
+            {
+                command[i + 1] = paraItems[i].trim();
+            }
+            result = result + CommandRunner.runCommand(command);
+        }
+        
+        return result;
+        
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void genTextDataToFiles(Vector<String> fileNames, String outputFileNameFullPath) throws IOException
+    {
+        StringBuffer sb = new StringBuffer();
+        for(String fileName: fileNames)
+        {
+            int a = fileName.lastIndexOf("/") + 1;            
+            sb.append(fileName.substring(a) + ":");
+            FileReader fr = new FileReader(fileName);
+            BufferedReader br = new BufferedReader(fr);
+            String line = br.readLine();
+            while(line != null)
+            {               
+                sb.append(line + ";");
+                line = br.readLine();
+            }
+            
+            int end = sb.length() - 1;            
+            if(sb.charAt(end) == ';')
+            {
+                sb.setCharAt(end, '\n'); 
+            }
+            
+            if(sb.charAt(end) == ':')
+            {
+                sb.append('\n');
+            }
+            
+            br.close();
+            fr.close();         
+        }
+        
+        
+        
+        FileWriter fw = new FileWriter(outputFileNameFullPath, true);
+        BufferedWriter bw = new BufferedWriter(fw);
+        bw.write(sb.toString());
+        bw.close();
+        fw.close();
+    }
+    
+    private String checkDirectory(HttpServletRequest request, String directory) throws IOException
+    {
+        if (directory == "" || directory == null)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pPath is null or empty";
+        }
+        
+        //Make sure the file exists
+        File file = new File(directory);
+        if(!file.exists())
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Directory [ " + directory + " ] does not exist";
+        }
+        
+        if(!file.isDirectory())
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pPath [ " + directory + " ] does not a directory";
+        }
+        
+        //Make sure the owner of the being processed file is the login user.
+        Users loginUser = (Users)request.getSession().getAttribute("userInfo");
+        String loginUserName = loginUser.getUserName();
+        FileUtils fu = new FileUtils();
+        String fileOwner = fu.getFileOwner(directory);
+        if(!loginUserName.equals(fileOwner))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Directory " + directory + " ] does not belong to current login user!";
+        }
+        return null;
+    }
     
     private String display(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
