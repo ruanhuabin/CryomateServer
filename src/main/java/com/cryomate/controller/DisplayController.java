@@ -8,7 +8,6 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -70,8 +69,7 @@ public class DisplayController
         if(!file.exists())
         {
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File [ " + pFilename + " ] does not exist";
-        }
-        
+        } 
         //Make sure the owner of the being processed file is the login user.
         Users loginUser = (Users)request.getSession().getAttribute("userInfo");
         String loginUserName = loginUser.getUserName();
@@ -80,10 +78,10 @@ public class DisplayController
         if(!loginUserName.equals(fileOwner))
         {
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File " + pFilename + " ] does not belong to current login user!";
-        }  
+        } 
         
         String fscInfo = fu.genDataFromFSCFile(pFilename);
-        
+
         return fscInfo;      
         
     }
@@ -272,7 +270,7 @@ public class DisplayController
         
     }
     
-    private String checkInputArgument(HttpServletRequest request, 
+    private String checkMultiStackParameter(HttpServletRequest request, 
                                       String dirOrFile, 
                                       String sNormalized, 
                                       String pMean, 
@@ -282,31 +280,10 @@ public class DisplayController
                                       String sJPEG, 
                                       String pFileFilter) throws IOException
     {
-        if (dirOrFile == "" || dirOrFile == null)
+        String ret = checkCommonParameter(request, dirOrFile, sNormalized, sRAW, sMRC, sJPEG);  
+        if(ret != null)
         {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pPath/pFilename is null or empty";
-        }
-        
-        //Make sure the file exists
-        File file = new File(dirOrFile);
-        if(!file.exists())
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Input [ " + dirOrFile + " ] does not exist";
-        }
-        
-        if(!file.isDirectory())
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pPath [ " + dirOrFile + " ] does not a directory";
-        }
-        
-        //Make sure the owner of the being processed file is the login user.
-        Users loginUser = (Users)request.getSession().getAttribute("userInfo");
-        String loginUserName = loginUser.getUserName();
-        FileUtils fu = new FileUtils();
-        String fileOwner = fu.getFileOwner(dirOrFile);
-        if(!loginUserName.equals(fileOwner))
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File or directory " + dirOrFile + " ] does not belong to current login user!";
+            return ret;
         }
         
         if(pFileFilter == null || pFileFilter == "")
@@ -314,41 +291,75 @@ public class DisplayController
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pFileFilter is null or empty";
         }
         
+        return null;
+    }
+
+    private String checkCommonParameter(HttpServletRequest request, String dirOrFile, String sNormalized, String sRAW, String sMRC,
+            String sJPEG) throws IOException
+    {
+        if (dirOrFile == "" || dirOrFile == null)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pPath/pFilename is null or empty";
+        }
+
+        // Make sure the file exists
+        File file = new File(dirOrFile);
+        if (!file.exists())
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Input [ " + dirOrFile + " ] does not exist";
+        }
+
+        if (!file.isDirectory())
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pPath [ " + dirOrFile + " ] does not a directory";
+        }
+        // Make sure the owner of the being processed file is the login user.
+        Users     loginUser     = (Users) request.getSession().getAttribute("userInfo");
+        String    loginUserName = loginUser.getUserName();
+        FileUtils fu            = new FileUtils();
+        String    fileOwner     = fu.getFileOwner(dirOrFile);
+        if (!loginUserName.equals(fileOwner))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File or directory " + dirOrFile
+                    + " ] does not belong to current login user!";
+        }
+
         if (sNormalized != null && sNormalized.length() == 0 && sJPEG != null && sJPEG.length() == 0)
         {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sNormalized and sJPEG should not set simultaneously from client.";
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX
+                    + "Error: Parameter sNormalized and sJPEG should not set simultaneously from client.";
         }
 
         if (sRAW != null && sMRC != null)
-        {
-
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sRAW and sMRC should not set simultaneously from client.";
+        { 
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX
+                    + "Error: Parameter sRAW and sMRC should not set simultaneously from client.";
         }
 
         if (sJPEG != null && sMRC != null)
-        {
-
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sMRC should not set simultaneously from client.";
-        }      
-        
+        { 
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX
+                    + "Error: Parameter sJPEG and sMRC should not set simultaneously from client.";
+        }
 
         if (sJPEG != null && sRAW != null)
-        {
-
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sRAW should not set simultaneously from client.";
-        } 
-        
-        if(sJPEG == null && sRAW == null && sMRC == null)
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG, sRAW, sMRC should not set null simultaneously";
+        { 
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX
+                    + "Error: Parameter sJPEG and sRAW should not set simultaneously from client.";
         }
-        
-        //sMRC or sRAW should come with sNormalized != null
-        if(sNormalized == null && (sMRC != null || sRAW != null))
+
+        if (sJPEG == null && sRAW == null && sMRC == null)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX
+                    + "Error: Parameter sJPEG, sRAW, sMRC should not set null simultaneously";
+        }
+
+        // sMRC or sRAW should come with sNormalized != null
+        if (sNormalized == null && (sMRC != null || sRAW != null))
         {
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: sMRC or sRAW should go with sNormalized";
-        }        
-        
+        }
+
         return null;
     }
     
@@ -367,12 +378,11 @@ public class DisplayController
         String sMRC        = request.getParameter("sMRC");
         String sJPEG       = request.getParameter("sJPEG");
         
-        String ret = checkInputArgument(request, pPath, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, pFileFilter);
+        String ret = checkMultiStackParameter(request, pPath, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, pFileFilter);
         if(ret != null)
         {
             return ret;
-        }
-        
+        } 
         if(pAll == null || pAll == "")
         {
             pAll = "-1";
@@ -392,7 +402,6 @@ public class DisplayController
         {   
             argumentString = genArgumentString(sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath);            
         }
-        
         //List directory
         String[] filters = pFileFilter.split(";");
         for(int i = 0; i < filters.length; i ++)
@@ -412,7 +421,6 @@ public class DisplayController
             {
                fileLists[i].add(files[j].getName());
             }
-            
             logger.debug("Filter [{}]  -->: {}", filters[i], fileLists[i]);
             fileLists[i].sort(null);
         }
