@@ -83,9 +83,8 @@ public class DisplayController
         String fscInfo = fu.genDataFromFSCFile(pFilename);
 
         return fscInfo;      
-        
     }
-    
+
     private String getLoginUserName(HttpServletRequest request)
     {
         Users loginUser = (Users)request.getSession().getAttribute("userInfo");
@@ -149,7 +148,6 @@ public class DisplayController
 
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sMRC should not set simultaneously from client.";
         }      
-        
 
         if (sJPEG != null && sRAW != null)
         {
@@ -167,9 +165,7 @@ public class DisplayController
         {
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: sMRC or sRAW should go with sNormalized";
         }
-        
-        
-        
+
         logger.info("stack file name: {}\n", pFilename);
 
         String outputDir = Generators.timeBasedGenerator().generate().toString();
@@ -266,19 +262,17 @@ public class DisplayController
         transferToClient(response, tarFile);
 
         return null;
-        
-        
     }
     
     private String checkMultiStackParameter(HttpServletRequest request, 
-                                      String dirOrFile, 
-                                      String sNormalized, 
-                                      String pMean, 
-                                      String pSTD, 
-                                      String sRAW, 
-                                      String sMRC, 
-                                      String sJPEG, 
-                                      String pFileFilter) throws IOException
+                                            String dirOrFile, 
+                                            String sNormalized, 
+                                            String pMean, 
+                                            String pSTD, 
+                                            String sRAW, 
+                                            String sMRC, 
+                                            String sJPEG, 
+                                            String pFileFilter) throws IOException
     {
         String ret = checkCommonParameter(request, dirOrFile, sNormalized, sRAW, sMRC, sJPEG);  
         if(ret != null)
@@ -363,11 +357,43 @@ public class DisplayController
         return null;
     }
     
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    @RequestMapping("/api/cDisp_MultiStack")
+    @RequestMapping("/api/cDisp_MultiStack")    
     @ResponseBody   
     public String cDispMultiStack(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
+        return multiDisplay(request, response);
+        
+    }
+    
+    @RequestMapping("/api/cDisp_MultiImage")    
+    @ResponseBody   
+    public String cDispMultiImage(HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        return multiDisplay(request, response);
+        
+    }
+    
+    public String multiDisplay(HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        /*
+         * Process Logic:
+         * 1. Valid parameter
+         * 2. Construct input arguments for program mrcs2jpeg based on input parameter
+         * 3. List directory pPath with filter string in parameter pFileFilter
+         * 4. pAll = -1: generate jpeg | raw | mrc file from *_Final.mrc or last mrc file
+         *               Write following message to rtn_string.txt
+         *                  filter string1: file list
+         *                  filename1:file content line by line separated by;
+         *    pAll = 1: generate jpeg | raw | mrc file from all listed mrc file
+         *              Write following message to rtn_string.txt
+         *                  filter string1: file list
+         *                  filename1:file content line by line separated by;
+         *    pAll = 0: only gen rtn_string.txt with content:
+         *                  filter string1: file list
+         *                  filter string2: file list
+         * 
+         *    
+         */
         String pPath       = request.getParameter("pPath");
         String pFileFilter = request.getParameter("pFileFilter");
         String pAll        = request.getParameter("pAll");
@@ -388,7 +414,7 @@ public class DisplayController
             pAll = "-1";
         }
         
-        if(!pAll.equals("-1") && !pAll.equals("1") && ! pAll.equals("1"))
+        if(!pAll.equals("-1") && !pAll.equals("1") && ! pAll.equals("0"))
         {
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pAll value should be -1, 0, or 1";
         }
@@ -513,7 +539,22 @@ public class DisplayController
         }
         else if(pAll.contentEquals("0"))
         {
-            //transferNoImageFile();
+            String outputFileNameFullPath = outputDirFullPath + File.separatorChar + "rtn_string.txt";
+            File f = new File(outputDirFullPath);
+            if(!f.exists())
+            {
+                boolean isSuccess = f.mkdirs();
+                if(!isSuccess)
+                {
+                    return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + " Error: Create dir [ " + outputDir + " ] failed, maybe permission denied.";
+                }
+            }
+            writeFilterFileList(outputFileNameFullPath, filters, fileLists);
+            //Compress output dir
+            String outputTarFileName = outputDirFullPath + ".tar";
+            File tarFile = compressImageDir(outputDirFullPath, outputDir, outputTarFileName);
+            //Transfer compressed output dir to client
+            transferToClient(response, tarFile);
         }
         return null;
     }
@@ -589,7 +630,6 @@ public class DisplayController
         {
             targetMRCFiles.add(pathPrefix + (String)files.get(files.size() - 1));
         }   
-                
     }
 
     @SuppressWarnings("rawtypes")
@@ -615,7 +655,6 @@ public class DisplayController
         } 
         
         return targetTextFiles;
-                
     }
     private String genBinaryData(Vector<String> fileToBeGenData, String argumentString)
     {
@@ -639,7 +678,6 @@ public class DisplayController
         }
         
         return result;
-        
     }
     
     public void writeFilterFileList(String outputFileNameFullPath, String[] filters, Vector[] fileLists) throws IOException
@@ -659,7 +697,6 @@ public class DisplayController
         bw.write(strFileList.toString());
         bw.close();
         fw.close();
-        
     }
 
     @SuppressWarnings("rawtypes")
@@ -693,18 +730,14 @@ public class DisplayController
             br.close();
             fr.close();         
         }
-        
-        
-        
+
         FileWriter fw = new FileWriter(outputFileNameFullPath, true);
         BufferedWriter bw = new BufferedWriter(fw);        
         bw.write(sb.toString());
         bw.close();
         fw.close();
     }
-    
-    
-    
+
     private String display(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
         String pFilename = request.getParameter("pFilename");        
@@ -756,7 +789,6 @@ public class DisplayController
 
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sMRC should not set simultaneously from client.";
         }      
-        
 
         if (sJPEG != null && sRAW != null)
         {
@@ -862,7 +894,6 @@ public class DisplayController
         transferToClient(response, tarFile);
 
         return null;
-
     }
     
     private File compressImageDir(String dirFullPathToBeCompressed, String dirToBeCompressed, String outputTarFileName)
@@ -929,7 +960,6 @@ public class DisplayController
         // System.out.println("result is: " + result);
 
         return file;
-
     }
 
     private void transferToClient(HttpServletResponse response, File tarFile)
@@ -984,6 +1014,5 @@ public class DisplayController
                 }
             }
         }
-
     }
 }
