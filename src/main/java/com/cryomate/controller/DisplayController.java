@@ -35,6 +35,7 @@ import com.fasterxml.uuid.Generators;
 public class DisplayController
 {
     private static final Logger logger  = LoggerFactory.getLogger(DisplayController.class);
+    
     @Value("${cryomate.data.tmpdir}")
     private String tmpDirPrefix;
     
@@ -187,16 +188,40 @@ public class DisplayController
         if (sRAW != null)
         {
             argumentString = argumentString + " --sRAW";
+            if(pStd == null)
+            {
+                argumentString = argumentString + " --pStd 1";
+            }
+            else
+            {
+                argumentString = argumentString + " --pStd " + pStd;
+            }
         }
 
         if (sMRC != null)
         {
             argumentString = argumentString + " --sMRC";
+            if(pStd == null)
+            {
+                argumentString = argumentString + " --pStd 1";
+            }
+            else
+            {
+                argumentString = argumentString + " --pStd " + pStd;
+            }
         }
 
         if (sJPEG != null)
         {
             argumentString = argumentString + "  --sJPEG";
+            if(pStd == null)
+            {
+                argumentString = argumentString + " --pStd 5";
+            }
+            else
+            {
+                argumentString = argumentString + " --pStd " + pStd;
+            }
         }
 
         if (pMean != null)
@@ -207,19 +232,7 @@ public class DisplayController
             argumentString = argumentString + " --pMean 0";
         }
 
-        if (pStd != null)
-        {
-            argumentString = argumentString + " --pStd " + pStd;
-        } else
-        {
-            if (sNormalized == null)
-            {
-                argumentString = argumentString + " --pStd 1";
-            } else
-            {
-                argumentString = argumentString + " --pStd 5";
-            }
-        }
+        
 
         if(pAxis == null)
         {
@@ -264,7 +277,7 @@ public class DisplayController
         return null;
     }
     
-    private String checkMultiStackParameter(HttpServletRequest request, 
+    private String checkMultiDisplyParameter(HttpServletRequest request, 
                                             String dirOrFile, 
                                             String sNormalized, 
                                             String pMean, 
@@ -303,10 +316,11 @@ public class DisplayController
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Input [ " + dirOrFile + " ] does not exist";
         }
 
-        if (!file.isDirectory())
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pPath [ " + dirOrFile + " ] does not a directory";
-        }
+//        if (!file.isDirectory())
+//        {
+//            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pPath [ " + dirOrFile + " ] does not a directory";
+//        }
+        
         // Make sure the owner of the being processed file is the login user.
         Users     loginUser     = (Users) request.getSession().getAttribute("userInfo");
         String    loginUserName = loginUser.getUserName();
@@ -361,7 +375,7 @@ public class DisplayController
     @ResponseBody   
     public String cDispMultiStack(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
-        return multiDisplay(request, response);
+        return multiDisplay(request, response, Constant.STACK_PROGRAM);
         
     }
     
@@ -369,11 +383,20 @@ public class DisplayController
     @ResponseBody   
     public String cDispMultiImage(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
-        return multiDisplay(request, response);
+        return multiDisplay(request, response, Constant.IMAGE_PROGRAM);
         
     }
     
-    public String multiDisplay(HttpServletRequest request, HttpServletResponse response) throws IOException
+    @RequestMapping("/api/cDisp_Multi3DMap")    
+    @ResponseBody   
+    public String cDispMulti3DMap(HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        return multiDisplay(request, response, Constant.MAP_PROGRAM);
+        
+    }
+    
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private String multiDisplay(HttpServletRequest request, HttpServletResponse response, String program) throws IOException
     {
         /*
          * Process Logic:
@@ -403,8 +426,10 @@ public class DisplayController
         String sRAW        = request.getParameter("sRAW");
         String sMRC        = request.getParameter("sMRC");
         String sJPEG       = request.getParameter("sJPEG");
+        String pSlice      = request.getParameter("pSlice");
+        String pAxis       = request.getParameter("pAxis");
         
-        String ret = checkMultiStackParameter(request, pPath, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, pFileFilter);
+        String ret = checkMultiDisplyParameter(request, pPath, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, pFileFilter);
         if(ret != null)
         {
             return ret;
@@ -419,14 +444,34 @@ public class DisplayController
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pAll value should be -1, 0, or 1";
         }
         
+        if(pAxis == null || pAxis == "")
+        {
+            pAxis = "z";
+        }
+        if(!pAxis.equals("z") && !pAxis.equals("y") && ! pAxis.equals("x"))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pAxis value should be x, y, or z";
+        }
+        
+        if(pSlice == null || pSlice == "")
+        {
+            pSlice = "0";
+        }
+        
+        
         //Generate unique output directory
         String argumentString = "";
+        if(program.contentEquals(Constant.MAP_PROGRAM))
+        {
+            argumentString="--pAxis " + pAxis + " --pSlice " + pSlice;
+        }
+        
         String loginUserName = getLoginUserName(request);
         String outputDir = Generators.timeBasedGenerator().generate().toString();
         String outputDirFullPath = this.tmpDirPrefix + File.separatorChar + loginUserName + File.separatorChar + outputDir;
         if(!pAll.contentEquals("0"))
         {   
-            argumentString = genArgumentString(sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath);            
+            argumentString = genArgumentString(argumentString, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath);            
         }
         //List directory
         String[] filters = pFileFilter.split(";");
@@ -472,7 +517,7 @@ public class DisplayController
                 Vector<String> mrcFiles = new Vector<String>();
                 getMRCFiles(mrcFiles, pPath, fileLists[0]);
                 logger.info("Those mrc files will be used to generate jpeg/mrc/raw: {}", mrcFiles);
-                String result = genBinaryData(mrcFiles, argumentString);
+                String result = genBinaryData(mrcFiles, argumentString, program);
                 logger.info("Gen jpeg|mrc|raw complete, return msg: {}", result);
             }
             
@@ -507,7 +552,7 @@ public class DisplayController
                     mrcFiles.add(fileName);                   
                 }
                 logger.info("Those mrc files will be used to generate jpeg/mrc/raw: {}", mrcFiles);
-                String result = genBinaryData(mrcFiles, argumentString);
+                String result = genBinaryData(mrcFiles, argumentString, program);
                 logger.info("Gen jpeg|mrc|raw complete, return msg: {}", result);
                 
             }
@@ -559,54 +604,65 @@ public class DisplayController
         return null;
     }
 
-    private String genArgumentString(String sNormalized, String pMean, String pStd, String sRAW, String sMRC,
+    private String genArgumentString(String currArgumentString, String sNormalized, String pMean, String pStd, String sRAW, String sMRC,
             String sJPEG, String outputDirFullPath)
     {
-        String argumentString;
-        argumentString = "--output " + outputDirFullPath;
+        
+        currArgumentString = currArgumentString + " --output " + outputDirFullPath;
 
         if (sNormalized != null)
         {
-            argumentString = argumentString + " --sNormalized";
+            currArgumentString = currArgumentString + " --sNormalized";
         }
 
         if (sRAW != null)
         {
-            argumentString = argumentString + " --sRAW";
+            currArgumentString = currArgumentString + " --sRAW";
+            if(pStd == null)
+            {
+                currArgumentString = currArgumentString + " --pStd 1";
+            }
+            else
+            {
+                currArgumentString = currArgumentString + " --pStd " + pStd;
+            }
         }
 
         if (sMRC != null)
         {
-            argumentString = argumentString + " --sMRC";
+            currArgumentString = currArgumentString + " --sMRC";
+            if(pStd == null)
+            {
+                currArgumentString = currArgumentString + " --pStd 1";
+            }
+            else
+            {
+                currArgumentString = currArgumentString + " --pStd " + pStd;
+            }
         }
 
         if (sJPEG != null)
         {
-            argumentString = argumentString + "  --sJPEG";
+            currArgumentString = currArgumentString + "  --sJPEG";
+            if(pStd == null)
+            {
+                currArgumentString = currArgumentString + " --pStd 5";
+            }
+            else
+            {
+                currArgumentString = currArgumentString + " --pStd " + pStd;
+            }
         }
 
         if (pMean != null)
         {
-            argumentString = argumentString + " --pMean " + pMean;
+            currArgumentString = currArgumentString + " --pMean " + pMean;
         } else
         {
-            argumentString = argumentString + " --pMean 0";
+            currArgumentString = currArgumentString + " --pMean 0";
         }
 
-        if (pStd != null)
-        {
-            argumentString = argumentString + " --pStd " + pStd;
-        } else
-        {
-            if (sNormalized == null)
-            {
-                argumentString = argumentString + " --pStd 1";
-            } else
-            {
-                argumentString = argumentString + " --pStd 5";
-            }
-        }
-        return argumentString;
+        return currArgumentString;
     }
 
     @SuppressWarnings("rawtypes")
@@ -656,9 +712,10 @@ public class DisplayController
         
         return targetTextFiles;
     }
-    private String genBinaryData(Vector<String> fileToBeGenData, String argumentString)
+    private String genBinaryData(Vector<String> fileToBeGenData, String argumentString, String program)
     {
-        // TODO Auto-generated method stub
+        logger.info("Full argument string: {}", argumentString);
+        
         String result = "";
         for(String f: fileToBeGenData)
         {
@@ -668,7 +725,7 @@ public class DisplayController
             argumentString = argumentString + " --input " + f + " --prefix " + prefix;            
             String paraItems[] = argumentString.split(" ");
             String[] command = new String[paraItems.length + 1];
-            command[0] = "./warehouse/bin/mrcs2jpeg";
+            command[0] = program;
             logger.info("Program: {}, Argument String : {}", command[0], argumentString);
             for (int i = 0; i < paraItems.length; i++)
             {
@@ -828,39 +885,52 @@ public class DisplayController
         if (sRAW != null)
         {
             argumentString = argumentString + " --sRAW";
+            if(pStd == null)
+            {
+                argumentString = argumentString + " --pStd 1";
+            }
+            else
+            {
+                argumentString = argumentString + " --pStd " + pStd;
+            }
         }
 
         if (sMRC != null)
         {
             argumentString = argumentString + " --sMRC";
+            if(pStd == null)
+            {
+                argumentString = argumentString + " --pStd 1";
+            }
+            else
+            {
+                argumentString = argumentString + " --pStd " + pStd;
+            }
         }
 
         if (sJPEG != null)
         {
             argumentString = argumentString + "  --sJPEG";
+            if(pStd == null)
+            {
+                argumentString = argumentString + " --pStd 5";
+            }
+            else
+            {
+                argumentString = argumentString + " --pStd " + pStd;
+            }
         }
 
         if (pMean != null)
         {
             argumentString = argumentString + " --pMean " + pMean;
-        } else
+        } 
+        else
         {
             argumentString = argumentString + " --pMean 0";
         }
 
-        if (pStd != null)
-        {
-            argumentString = argumentString + " --pStd " + pStd;
-        } else
-        {
-            if (sNormalized == null)
-            {
-                argumentString = argumentString + " --pStd 1";
-            } else
-            {
-                argumentString = argumentString + " --pStd 5";
-            }
-        }
+        
 
         logger.info("Argument String = {}\n", argumentString);
 
