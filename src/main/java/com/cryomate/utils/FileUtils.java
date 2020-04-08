@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -161,11 +162,6 @@ public class FileUtils
         {
             sb[i] = new StringBuffer();
         }
-//        sb[0].append("x:");
-//        for(int i = 1; i < columnNum; i ++)
-//        {
-//            sb[i].append("y" + i + ":");
-//        }
         
         while(line != null)
         {
@@ -196,6 +192,32 @@ public class FileUtils
         //Remove the last '\n'
         finalValue.setCharAt(finalValue.length() - 1, '\n');
         return finalValue.toString();
+    }
+
+    public String genDataFromTextFile(String fileFullName) throws IOException
+    {
+        FileReader fr = new FileReader(fileFullName);
+        BufferedReader br = new BufferedReader(fr);
+        String line = br.readLine();              
+        StringBuffer sb = new StringBuffer();        
+        
+        while(line != null)
+        {
+            sb.append(line + ";");
+            line = br.readLine();
+        }
+        sb.setCharAt(sb.length() - 1, '\n');
+        
+        if(br != null)
+        {
+            br.close();
+        }
+        if(fr != null)
+        {
+            fr.close();
+        }
+        
+        return sb.toString();
     }
 
 }

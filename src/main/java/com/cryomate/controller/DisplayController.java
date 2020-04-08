@@ -208,6 +208,127 @@ public class DisplayController
 
         return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + rtnString.toString();      
     }
+    
+    @SuppressWarnings("rawtypes")
+    @RequestMapping("/api/cDisp_MultiText")
+    @ResponseBody    
+    public String cDisplayMultiText(HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        String pPath = request.getParameter("pPath"); 
+        //This parameter is reserved for future use
+        String pFileFilter = request.getParameter("pFileFilter");
+        String pAll = request.getParameter("pAll");
+        if(pPath == null || pPath.length() == 0)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pFilename is null or empty";
+        }
+        
+        //Make sure the file exists
+        File file = new File(pPath);
+        if(!file.exists())
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File [ " + pPath + " ] does not exist";
+        } 
+        //Make sure the owner of the being processed file is the login user.
+        Users loginUser = (Users)request.getSession().getAttribute("userInfo");
+        String loginUserName = loginUser.getUserName();
+        String fileOwner = fu.getFileOwner(pPath);
+        if(!loginUserName.equals(fileOwner))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File " + pPath + " ] does not belong to current login user!";
+        }
+        
+        if(pFileFilter == null || pFileFilter == "")
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pFileFilter is null or empty";
+        }
+        
+        if(pAll == null || pAll == "")
+        {
+            pAll = "-1";
+        }
+        
+        if(!pAll.contentEquals("-1") && !pAll.contentEquals("1") && !pAll.contentEquals("0"))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pAll should be -1,0, or 1";
+        }
+        String filters[] = pFileFilter.split(";");
+        Vector[] fileLists = fu.listDir(pPath, filters);
+        
+        StringBuffer rtnString= new StringBuffer();
+        
+        if(pAll.contentEquals("-1"))
+        {
+            for(int i = 0; i < fileLists.length; i ++)
+            {
+                rtnString.append(filters[i] + ":");
+                for(int k = 0; k < fileLists[i].size(); k ++)
+                {
+                    rtnString.append(fileLists[i].get(k) + ";");
+                }
+                rtnString.setCharAt(rtnString.length() - 1, '\n');
+            }
+            
+            for(int i = 0; i < fileLists.length; i ++)
+            {                
+                Vector<String> textFiles = getTextFiles(pPath, fileLists[i]);
+                for(int j = 0; j < textFiles.size(); j ++)
+                {
+                    String fileFullName = textFiles.get(j);
+                    int a = fileFullName.lastIndexOf("/") + 1;
+                    String fileName = fileFullName.substring(a);
+                    rtnString.append(fileName + ":");
+                    rtnString.append(fu.genDataFromTextFile(fileFullName));
+                }                
+            }
+            
+        }
+        else if(pAll.contentEquals("1"))
+        {
+            for(int i = 0; i < fileLists.length; i ++)
+            {
+                rtnString.append(filters[i] + ":");
+                for(int k = 0; k < fileLists[i].size(); k ++)
+                {
+                    rtnString.append(fileLists[i].get(k) + ";");
+                }
+                rtnString.setCharAt(rtnString.length() - 1, '\n');
+            }
+            for(int i = 0; i < fileLists.length; i ++)
+            {
+                Vector<String> textFiles = new Vector<String>();
+                for(int m = 0; m < fileLists[i].size(); m ++)
+                {
+                    textFiles.add(pPath + File.separatorChar + fileLists[i].get(m));
+                }
+                for(int j = 0; j < textFiles.size(); j ++)
+                {
+                    String fileFullName = textFiles.get(j);
+                    int a = fileFullName.lastIndexOf("/") + 1;
+                    String fileName = fileFullName.substring(a);
+                    rtnString.append(fileName + ":");
+                    rtnString.append(fu.genDataFromTextFile(fileFullName));
+                }
+                
+            }
+            
+        }
+        else if(pAll.contentEquals("0"))
+        {
+            for(int i = 0; i < fileLists.length; i ++)
+            {
+                rtnString.append(filters[i] + ":");
+                for(int k = 0; k < fileLists[i].size(); k ++)
+                {
+                    rtnString.append(fileLists[i].get(k) + ";");
+                }
+                rtnString.setCharAt(rtnString.length() - 1, '\n');
+           }   
+        }
+
+        return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + rtnString.toString(); 
+        
+    }
 
     private String getLoginUserName(HttpServletRequest request)
     {
