@@ -2,6 +2,7 @@ package com.cryomate.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -18,7 +19,9 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,12 +53,6 @@ public class FileUtils
 		Path file = Paths.get(fileNameFullPath);;
 		PosixFileAttributes attr = Files.readAttributes(file,
 		        PosixFileAttributes.class);		
-//		System.out.format("%s %s %s\n", attr.owner().getName(),
-//		        attr.group().getName(),
-//		        PosixFilePermissions.toString(attr.permissions()));
-//		logger.info("File [{}] attribute: {} {} {}", fileNameFullPath,attr.owner().getName(),
-//		        attr.group().getName(),
-//		        PosixFilePermissions.toString(attr.permissions()) );
 		CryomateFileAttribute cfa = new CryomateFileAttribute();
 		cfa.setOwner(attr.owner().getName());
 		cfa.setGroup(attr.group().getName());
@@ -63,6 +60,28 @@ public class FileUtils
 		return cfa;
 		
 		
+	}
+	
+	@SuppressWarnings("rawtypes")
+    public Vector[] listDir(String pPath, String[] filters)
+	{
+	    File dir = new File(pPath);
+        Vector[] fileLists = new Vector[filters.length];        
+        //Save file name list in fileLists, format: filterString:filename1;filename2;filename3;filenameN;
+        for(int i = 0; i < filters.length; i ++)
+        {
+            fileLists[i] = new Vector();
+            FileFilter fileFilter = new WildcardFileFilter(filters[i]);
+            File[] files = dir.listFiles(fileFilter);
+            for (int j = 0; j < files.length; j++) 
+            {
+               fileLists[i].add(files[j].getName());
+            }
+            logger.info("Filter [{}]  -->: {}", filters[i], fileLists[i]);
+            fileLists[i].sort(null);
+        }
+        
+        return fileLists;
 	}
 	
 	public int changeFileOwnerGroup(String fileFullName, String owner, String group) throws IOException
@@ -175,10 +194,8 @@ public class FileUtils
             finalValue.append(sb[i]);
         }
         //Remove the last '\n'
-        finalValue.setCharAt(finalValue.length() - 1, '\0');
-        return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + finalValue.toString();
+        finalValue.setCharAt(finalValue.length() - 1, '\n');
+        return finalValue.toString();
     }
-	
-	
 
 }

@@ -34,6 +34,7 @@ import com.fasterxml.uuid.Generators;
 @RequestMapping("/")
 public class DisplayController
 {
+    private FileUtils fu = new FileUtils();
     private static final Logger logger  = LoggerFactory.getLogger(DisplayController.class);
     
     @Value("${cryomate.data.tmpdir}")
@@ -83,7 +84,129 @@ public class DisplayController
         
         String fscInfo = fu.genDataFromFSCFile(pFilename);
 
-        return fscInfo;      
+        return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + fscInfo;      
+    }
+    
+    @SuppressWarnings("rawtypes")
+    @RequestMapping("/api/cDisp_MultiFSC")
+    @ResponseBody    
+    public String cDisplayMultiFSC(HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        String pPath = request.getParameter("pPath"); 
+        //This parameter is reserved for future use
+        String pTextDataFormat = request.getParameter("pTextDataFormat");
+        String pFileFilter = request.getParameter("pFileFilter");
+        String pAll = request.getParameter("pAll");
+        if(pPath == null || pPath.length() == 0)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pFilename is null or empty";
+        }
+        
+        //Make sure the file exists
+        File file = new File(pPath);
+        if(!file.exists())
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File [ " + pPath + " ] does not exist";
+        } 
+        //Make sure the owner of the being processed file is the login user.
+        Users loginUser = (Users)request.getSession().getAttribute("userInfo");
+        String loginUserName = loginUser.getUserName();
+        String fileOwner = fu.getFileOwner(pPath);
+        if(!loginUserName.equals(fileOwner))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File " + pPath + " ] does not belong to current login user!";
+        }
+        
+        if(pFileFilter == null || pFileFilter == "")
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pFileFilter is null or empty";
+        }
+        
+        if(pAll == null || pAll == "")
+        {
+            pAll = "-1";
+        }
+        
+        if(!pAll.contentEquals("-1") && !pAll.contentEquals("1") && !pAll.contentEquals("0"))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pAll should be -1,0, or 1";
+        }
+        String filters[] = pFileFilter.split(";");
+        Vector[] fileLists = fu.listDir(pPath, filters);
+        
+        StringBuffer rtnString= new StringBuffer();
+        
+        if(pAll.contentEquals("-1"))
+        {
+            for(int i = 0; i < fileLists.length; i ++)
+            {
+                rtnString.append(filters[i] + ":");
+                for(int k = 0; k < fileLists[i].size(); k ++)
+                {
+                    rtnString.append(fileLists[i].get(k) + ";");
+                }
+                rtnString.setCharAt(rtnString.length() - 1, '\n');
+            }
+            
+            for(int i = 0; i < fileLists.length; i ++)
+            {                
+                Vector<String> textFiles = getTextFiles(pPath, fileLists[i]);
+                for(int j = 0; j < textFiles.size(); j ++)
+                {
+                    String fileFullName = textFiles.get(j);
+                    int a = fileFullName.lastIndexOf("/") + 1;
+                    String fileName = fileFullName.substring(a);
+                    rtnString.append(fileName + ":");
+                    rtnString.append(fu.genDataFromFSCFile(fileFullName));
+                }
+                
+            }
+            
+        }
+        else if(pAll.contentEquals("1"))
+        {
+            for(int i = 0; i < fileLists.length; i ++)
+            {
+                rtnString.append(filters[i] + ":");
+                for(int k = 0; k < fileLists[i].size(); k ++)
+                {
+                    rtnString.append(fileLists[i].get(k) + ";");
+                }
+                rtnString.setCharAt(rtnString.length() - 1, '\n');
+            }
+            for(int i = 0; i < fileLists.length; i ++)
+            {
+                Vector<String> textFiles = new Vector<String>();
+                for(int m = 0; m < fileLists[i].size(); m ++)
+                {
+                    textFiles.add(pPath + File.separatorChar + fileLists[i].get(m));
+                }
+                for(int j = 0; j < textFiles.size(); j ++)
+                {
+                    String fileFullName = textFiles.get(j);
+                    int a = fileFullName.lastIndexOf("/") + 1;
+                    String fileName = fileFullName.substring(a);
+                    rtnString.append(fileName + ":");
+                    rtnString.append(fu.genDataFromFSCFile(fileFullName));
+                }
+                
+            }
+            
+        }
+        else if(pAll.contentEquals("0"))
+        {
+            for(int i = 0; i < fileLists.length; i ++)
+            {
+                rtnString.append(filters[i] + ":");
+                for(int k = 0; k < fileLists[i].size(); k ++)
+                {
+                    rtnString.append(fileLists[i].get(k) + ";");
+                }
+                rtnString.setCharAt(rtnString.length() - 1, '\n');
+           }   
+        }
+
+        return Constant.HTTP_RTN_TEXT_RESULT_PREFIX + rtnString.toString();      
     }
 
     private String getLoginUserName(HttpServletRequest request)
@@ -479,22 +602,9 @@ public class DisplayController
         {
             logger.debug("filter string [{}] : {}", i, filters[i]);
         }
+               
         
-        File dir = new File(pPath);
-        Vector[] fileLists = new Vector[filters.length];        
-        //Save file name list in fileLists, format: filterString:filename1;filename2;filename3;filenameN;
-        for(int i = 0; i < filters.length; i ++)
-        {
-            fileLists[i] = new Vector();
-            FileFilter fileFilter = new WildcardFileFilter(filters[i]);
-            File[] files = dir.listFiles(fileFilter);
-            for (int j = 0; j < files.length; j++) 
-            {
-               fileLists[i].add(files[j].getName());
-            }
-            logger.debug("Filter [{}]  -->: {}", filters[i], fileLists[i]);
-            fileLists[i].sort(null);
-        }
+        Vector[] fileLists = fu.listDir(pPath, filters);
         //Construct file list as string
         StringBuffer sbFileList = new StringBuffer();        
         for(int i = 0; i < fileLists.length; i ++)
@@ -721,7 +831,7 @@ public class DisplayController
         {
             int a = f.lastIndexOf('/') + 1;
             int b = f.lastIndexOf(".mrc");
-            String prefix = f.substring(a,b);
+            String prefix = f.substring(a,b) + "_";
             argumentString = argumentString + " --input " + f + " --prefix " + prefix;            
             String paraItems[] = argumentString.split(" ");
             String[] command = new String[paraItems.length + 1];

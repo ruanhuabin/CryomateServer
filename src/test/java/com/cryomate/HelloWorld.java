@@ -240,6 +240,10 @@ public class HelloWorld
 
     public static void main(String[] args) throws IOException
     {
+        String str = "/root/file/fsc-files///FSC_Final.txt";
+        int a = str.lastIndexOf("/")+ 1;
+        System.out.println("a = " + a);
+        System.out.println(str.substring(a));
 
     }
 
