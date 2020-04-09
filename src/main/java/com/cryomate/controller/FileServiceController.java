@@ -79,7 +79,8 @@ public class FileServiceController
 		{
 		    pCommandID = "";
 		}
-		
+		response.addHeader("pCommandID", pCommandID);
+		logger.info("Add pCommandID = [{}] to http header", pCommandID);
 		File fileDir = new File(dirPath);		
 		logger.info("dir path: {}, absolute path: {}", dirPath, fileDir.getAbsolutePath());
 		if(!fileDir.exists())
@@ -133,7 +134,7 @@ public class FileServiceController
 		}
 
 		//response.getWriter().write(Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "\n");
-		response.addHeader("pCommandID", pCommandID);
+		
 		return fileArray;
 	}	
 
