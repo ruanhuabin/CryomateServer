@@ -74,6 +74,12 @@ public class FileServiceController
 			return null;
 		}
 		
+		String pCommandID = request.getParameter("pCommandID");
+		if(pCommandID == null)
+		{
+		    pCommandID = "";
+		}
+		
 		File fileDir = new File(dirPath);		
 		logger.info("dir path: {}, absolute path: {}", dirPath, fileDir.getAbsolutePath());
 		if(!fileDir.exists())
@@ -127,6 +133,7 @@ public class FileServiceController
 		}
 
 		//response.getWriter().write(Constant.HTTP_RTN_TEXT_RESULT_PREFIX + "\n");
+		response.addHeader("pCommandID", pCommandID);
 		return fileArray;
 	}	
 
