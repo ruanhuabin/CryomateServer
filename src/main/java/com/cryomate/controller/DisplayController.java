@@ -946,23 +946,48 @@ public class DisplayController
     private String genBinaryData(Vector<String> fileToBeGenData, String argumentString, String program)
     {
         logger.info("Full argument string: {}", argumentString);
-        
+        int cnt = 0;
         String result = "";
         for(String f: fileToBeGenData)
         {
             int a = f.lastIndexOf('/') + 1;
             int b = f.lastIndexOf(".mrc");
             String prefix = f.substring(a,b) + "_";
-            argumentString = argumentString + " --input " + f + " --prefix " + prefix;            
+            
+//            if(cnt == 0) //Using first file's nx, ny,nz value as pDimX, pDimY, pDimZ's value.
+//            {
+//                argumentString = argumentString + " --input " + f + " --prefix " + prefix + " --genMeta 1";
+//            }
+//            else
+//            {
+//                argumentString = argumentString + " --input " + f + " --prefix " + prefix + " --genMeta 0";
+//            }
+            
             String paraItems[] = argumentString.split(" ");
-            String[] command = new String[paraItems.length + 1];
+            String[] command = new String[paraItems.length + 1 + 2 + 2 + 2];
             command[0] = program;
-            logger.info("Program: {}, Argument String : {}", command[0], argumentString);
+            command[1] = "--input";
+            command[2] = f;
+            command[3] = "--genMeta";
+            if(cnt == 0)
+            {
+                command[4] = "1";
+            }
+            else
+            {
+                command[4] = "0";
+            }
+            cnt ++;
+            
+            command[5] = "--prefix";
+            command[6] = prefix;
+            logger.info("Program: {}, Argument String : {} {} {} {} {} {} {} ", command[0], command[1], command[2], command[3], command[4], command[5], command[6], argumentString);
             for (int i = 0; i < paraItems.length; i++)
             {
-                command[i + 1] = paraItems[i].trim();
+                command[i + 7] = paraItems[i].trim();
             }
             result = result + CommandRunner.runCommand(command);
+            
         }
         
         return result;
