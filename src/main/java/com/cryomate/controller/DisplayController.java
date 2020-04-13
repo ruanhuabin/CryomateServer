@@ -11,6 +11,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
@@ -352,132 +353,22 @@ public class DisplayController
         String pAxis       = request.getParameter("pAxis");
         String pSlice      = request.getParameter("pSlice");
         
-        logger.info("pFilename = {}, sNormalized = {}, sRaw = {}, sMRC = {}, sJPEG = {}, pMean = {}, pStd = {}, pAxis = {}, pSlice = {}\n",
-                pFilename, sNormalized, sRAW, sMRC, sJPEG, pMean, pStd, pAxis, pSlice);
-        
-        if (pFilename == "" || pFilename == null)
+        String ret = checkCommonParameter(request, pFilename, sNormalized, sRAW, sMRC, sJPEG);
+        if(ret != null)
         {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pFilename is null or empty";
+            return ret;
         }
-        
-        //Make sure the file exists
-        File file = new File(pFilename);
-        if(!file.exists())
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File [ " + pFilename + " ] does not exist";
-        }
-        
-        //Make sure the owner of the being processed file is the login user.
-        Users loginUser = (Users)request.getSession().getAttribute("userInfo");
-        String loginUserName = loginUser.getUserName();
-        FileUtils fu = new FileUtils();
-        String fileOwner = fu.getFileOwner(pFilename);
-        if(!loginUserName.equals(fileOwner))
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File " + pFilename + " ] does not belong to current login user!";
-        }        
-
-        if (sNormalized != null && sNormalized.length() == 0 && sJPEG != null && sJPEG.length() == 0)
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sNormalized and sJPEG should not set simultaneously from client.";
-        }
-
-        if (sRAW != null && sMRC != null)
-        {
-
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sRAW and sMRC should not set simultaneously from client.";
-        }
-
-        if (sJPEG != null && sMRC != null)
-        {
-
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sMRC should not set simultaneously from client.";
-        }      
-
-        if (sJPEG != null && sRAW != null)
-        {
-
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sRAW should not set simultaneously from client.";
-        } 
-        
-        if(sJPEG == null && sRAW == null && sMRC == null)
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG, sRAW, sMRC should not set null simultaneously";
-        }
-        
-        //sMRC or sRAW should come with sNormalized != null
-        if(sNormalized == null && (sMRC != null || sRAW != null))
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: sMRC or sRAW should go with sNormalized";
-        }
-
-        logger.info("stack file name: {}\n", pFilename);
 
         String outputDir = Generators.timeBasedGenerator().generate().toString();
+        String loginUserName = getLoginUserName(request);
         String outputDirFullPath = this.tmpDirPrefix + 
                            File.separatorChar + 
                            loginUserName + 
                            File.separatorChar + 
                            outputDir;
         
-        logger.info("output dir: {}\n", outputDirFullPath);
-
-        String argumentString = "--input " + pFilename + " --output " + outputDirFullPath;
-
-        if (sNormalized != null)
-        {
-            argumentString = argumentString + " --sNormalized";
-        }
-
-        if (sRAW != null)
-        {
-            argumentString = argumentString + " --sRAW";
-            if(pStd == null)
-            {
-                argumentString = argumentString + " --pStd 1";
-            }
-            else
-            {
-                argumentString = argumentString + " --pStd " + pStd;
-            }
-        }
-
-        if (sMRC != null)
-        {
-            argumentString = argumentString + " --sMRC";
-            if(pStd == null)
-            {
-                argumentString = argumentString + " --pStd 1";
-            }
-            else
-            {
-                argumentString = argumentString + " --pStd " + pStd;
-            }
-        }
-
-        if (sJPEG != null)
-        {
-            argumentString = argumentString + "  --sJPEG";
-            if(pStd == null)
-            {
-                argumentString = argumentString + " --pStd 5";
-            }
-            else
-            {
-                argumentString = argumentString + " --pStd " + pStd;
-            }
-        }
-
-        if (pMean != null)
-        {
-            argumentString = argumentString + " --pMean " + pMean;
-        } else
-        {
-            argumentString = argumentString + " --pMean 0";
-        }
-
-        
-
+        String argumentString = "--input " + pFilename;
+        argumentString = genArgumentString(argumentString, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath);
         if(pAxis == null)
         {
             pAxis = "z";            
@@ -492,34 +383,119 @@ public class DisplayController
         String paraItems[] = argumentString.split(" ");
         System.out.println("length of paraItems: " + paraItems.length);
 
-        String command[] = new String[paraItems.length + 1];
+        //1:program name
+        //2:prefix and prefix value
+        String command[] = new String[paraItems.length + 1 + 2];
         command[0] = "warehouse/bin/cDisp_3DMap";
-
+        int beginIndex = pFilename.lastIndexOf('/') + 1;
+        String fileName = pFilename.substring(beginIndex);
+        command[1] = "--prefix";
+        command[2] = fileName + "@";
         for (int i = 0; i < paraItems.length; i++)
         {
-            command[i + 1] = paraItems[i].trim();
+            command[i + 3] = paraItems[i].trim();
         }
 
-        System.out.println("-->command to be executed:");
+        System.out.println("====>Command to be executed:");
         for (String item : command)
         {
             System.out.print(item + " ");
         }
-        System.out.println();
+        System.out.println("");
 
+        //run command
         String result = CommandRunner.runCommand(command);
         if (result.length() != 0)
         {
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Failed to generate Image [ detail:  " + result + " ]";
         }
-
+        //compress directory
         File tarFile = compressImageDir(outputDirFullPath, outputDir, outputDirFullPath + ".tar");
-
-        logger.info("Compressed file full path: {}", tarFile.getAbsoluteFile());
+        logger.info("Tar File Full Path: {}", tarFile.getAbsoluteFile());
+        //transfer tar file to client
         transferToClient(response, tarFile);
 
         return null;
     }
+    
+    @RequestMapping("/api/cDisp_3DMap2")
+    @ResponseBody   
+    public String cDisplay3DMap2(HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        String pFilename   = request.getParameter("pFilename");
+        String sNormalized = request.getParameter("sNormalized");
+        String pMean       = request.getParameter("pMean");
+        String pStd        = request.getParameter("pSTD");
+        String sRAW        = request.getParameter("sRAW");
+        String sMRC        = request.getParameter("sMRC");
+        String sJPEG       = request.getParameter("sJPEG");
+        String pAxis       = request.getParameter("pAxis");
+        String pSlice      = request.getParameter("pSlice");
+        
+        String ret = checkCommonParameter(request, pFilename, sNormalized, sRAW, sMRC, sJPEG);
+        if(ret != null)
+        {
+            return ret;
+        }
+        String outputDir = Generators.timeBasedGenerator().generate().toString();
+        String loginUserName = getLoginUserName(request);
+        String outputDirFullPath = this.tmpDirPrefix + 
+                           File.separatorChar + 
+                           loginUserName + 
+                           File.separatorChar + 
+                           outputDir;
+        
+        String argumentString = "--input " + pFilename;
+        argumentString = genArgumentString(argumentString, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath);
+        if(pAxis == null)
+        {
+            pAxis = "z";            
+        }
+        if(pSlice == null)
+        {
+            pSlice = "0";
+        }
+        argumentString = argumentString + " --pAxis " + pAxis + " --pSlice " + pSlice;
+        logger.info("Argument String = {}\n", argumentString);
+
+        String paraItems[] = argumentString.split(" ");
+        System.out.println("length of paraItems: " + paraItems.length);
+        //1:program name
+        //2:prefix and prefix value
+        String command[] = new String[paraItems.length + 1 + 2];
+        command[0] = "warehouse/bin/cDisp_3DMap";
+        int beginIndex = pFilename.lastIndexOf('/') + 1;
+        String fileName = pFilename.substring(beginIndex);
+        command[1] = "--prefix";
+        command[2] = fileName + "@";
+        for (int i = 0; i < paraItems.length; i++)
+        {
+            command[i + 3] = paraItems[i].trim();
+        }
+
+        System.out.println("====>Command to be executed:");
+        for (String item : command)
+        {
+            System.out.print(item + " ");
+        }
+        System.out.println("");
+
+        //run command
+        String result = CommandRunner.runCommand(command);
+        if (result.length() != 0)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Failed to generate Image [ detail:  " + result + " ]";
+        }
+        //compress directory
+        File tarFile = compressImageDir(outputDirFullPath, outputDir, outputDirFullPath + ".tar");
+        logger.info("Tar File Full Path: {}", tarFile.getAbsoluteFile());
+        //transfer tar file to client
+        transferToClient(response, tarFile);
+
+        return null;
+    }
+
+    
     
     private String checkMultiDisplyParameter(HttpServletRequest request, 
                                             String dirOrFile, 
@@ -560,11 +536,6 @@ public class DisplayController
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Input [ " + dirOrFile + " ] does not exist";
         }
 
-//        if (!file.isDirectory())
-//        {
-//            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pPath [ " + dirOrFile + " ] does not a directory";
-//        }
-        
         // Make sure the owner of the being processed file is the login user.
         Users     loginUser     = (Users) request.getSession().getAttribute("userInfo");
         String    loginUserName = loginUser.getUserName();
@@ -723,8 +694,6 @@ public class DisplayController
         {
             logger.debug("filter string [{}] : {}", i, filters[i]);
         }
-               
-        
         Vector[] fileLists = fu.listDir(pPath, filters);
         //Construct file list as string
         StringBuffer sbFileList = new StringBuffer();        
@@ -954,16 +923,11 @@ public class DisplayController
             int b = f.lastIndexOf(".mrc");
             String prefix = f.substring(a,b) + "_";
             
-//            if(cnt == 0) //Using first file's nx, ny,nz value as pDimX, pDimY, pDimZ's value.
-//            {
-//                argumentString = argumentString + " --input " + f + " --prefix " + prefix + " --genMeta 1";
-//            }
-//            else
-//            {
-//                argumentString = argumentString + " --input " + f + " --prefix " + prefix + " --genMeta 0";
-//            }
-            
             String paraItems[] = argumentString.split(" ");
+            //1:program name
+            //2: --input value
+            //2: --genMeta value
+            //2: --prefix value
             String[] command = new String[paraItems.length + 1 + 2 + 2 + 2];
             command[0] = program;
             command[1] = "--input";
@@ -1061,146 +1025,35 @@ public class DisplayController
         String sMRC        = request.getParameter("sMRC");
         String sJPEG       = request.getParameter("sJPEG");
 
-        logger.info("pFilename = {}, sNormalized = {}, sRaw = {}, sMRC = {}, sJPEG = {}, pMean = {}, pStd = {}\n",
-                pFilename, sNormalized, sRAW, sMRC, sJPEG, pMean, pStd);
-
-        if (pFilename == "" || pFilename == null)
+        String ret = checkCommonParameter(request, pFilename, sNormalized, sRAW, sMRC, sJPEG);  
+        if(ret != null)
         {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pFilename is null or empty";
+            return ret;
         }
-        
-        //Make sure the file exists
-        File file = new File(pFilename);
-        if(!file.exists())
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File [ " + pFilename + " ] does not exist";
-        }
-        
-        //Make sure the owner of the being processed file is the login user.
-        Users loginUser = (Users)request.getSession().getAttribute("userInfo");
-        String loginUserName = loginUser.getUserName();
-        FileUtils fu = new FileUtils();
-        String fileOwner = fu.getFileOwner(pFilename);
-        if(!loginUserName.equals(fileOwner))
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: File " + pFilename + " ] does not belong to current login user!";
-        }        
-
-        if (sNormalized != null && sNormalized.length() == 0 && sJPEG != null && sJPEG.length() == 0)
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sNormalized and sJPEG should not set simultaneously from client.";
-        }
-
-        if (sRAW != null && sMRC != null)
-        {
-
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sRAW and sMRC should not set simultaneously from client.";
-        }
-
-        if (sJPEG != null && sMRC != null)
-        {
-
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sMRC should not set simultaneously from client.";
-        }      
-
-        if (sJPEG != null && sRAW != null)
-        {
-
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG and sRAW should not set simultaneously from client.";
-        } 
-        
-        if(sJPEG == null && sRAW == null && sMRC == null)
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Parameter sJPEG, sRAW, sMRC should not set null simultaneously";
-        }
-        
-        //sMRC or sRAW should come with sNormalized != null
-        if(sNormalized == null && (sMRC != null || sRAW != null))
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: sMRC or sRAW should go with sNormalized";
-        }
-        
-        logger.info("stack file name: {}\n", pFilename);
-
+        String loginUserName = getLoginUserName(request);
         String outputDir = Generators.timeBasedGenerator().generate().toString();
-        String outputDirFullPath = this.tmpDirPrefix + 
-                           File.separatorChar + 
-                           loginUserName + 
-                           File.separatorChar + 
-                           outputDir;
-        
-        logger.info("output dir: {}\n", outputDirFullPath);
+        String outputDirFullPath = this.tmpDirPrefix + File.separatorChar + 
+                                   loginUserName + File.separatorChar + outputDir;
 
-        String argumentString = "--input " + pFilename + " --output " + outputDirFullPath;
-
-        if (sNormalized != null)
-        {
-            argumentString = argumentString + " --sNormalized";
-        }
-
-        if (sRAW != null)
-        {
-            argumentString = argumentString + " --sRAW";
-            if(pStd == null)
-            {
-                argumentString = argumentString + " --pStd 1";
-            }
-            else
-            {
-                argumentString = argumentString + " --pStd " + pStd;
-            }
-        }
-
-        if (sMRC != null)
-        {
-            argumentString = argumentString + " --sMRC";
-            if(pStd == null)
-            {
-                argumentString = argumentString + " --pStd 1";
-            }
-            else
-            {
-                argumentString = argumentString + " --pStd " + pStd;
-            }
-        }
-
-        if (sJPEG != null)
-        {
-            argumentString = argumentString + "  --sJPEG";
-            if(pStd == null)
-            {
-                argumentString = argumentString + " --pStd 5";
-            }
-            else
-            {
-                argumentString = argumentString + " --pStd " + pStd;
-            }
-        }
-
-        if (pMean != null)
-        {
-            argumentString = argumentString + " --pMean " + pMean;
-        } 
-        else
-        {
-            argumentString = argumentString + " --pMean 0";
-        }
-
-        
-
-        logger.info("Argument String = {}\n", argumentString);
+        String argumentString = "--input " + pFilename;
+        argumentString = genArgumentString(argumentString, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath);
+        logger.info("Return value of genArgumentString() = {}", argumentString);
 
         String paraItems[] = argumentString.split(" ");
-        System.out.println("length of paraItems: " + paraItems.length);
-
-        String command[] = new String[paraItems.length + 1];
+        //1:store program name
+        //2:store prefix argument, prefix value is based on input file name
+        String command[] = new String[paraItems.length + 1 + 2];
         command[0] = "warehouse/bin/mrcs2jpeg";
-
+        //construct prefix value 'filename@'
+        int a = pFilename.lastIndexOf('/') + 1;
+        String fileName = pFilename.substring(a);
+        command[1] = "--prefix";
+        command[2] = fileName + "@";
+        
         for (int i = 0; i < paraItems.length; i++)
         {
-            command[i + 1] = paraItems[i].trim();
+            command[i + 3] = paraItems[i].trim();
         }
-
         System.out.println("-->command to be executed:");
         for (String item : command)
         {
@@ -1230,7 +1083,7 @@ public class DisplayController
         {
             file.getParentFile().mkdirs();
         }
-        System.out.println("File full path = " + file.getAbsolutePath());
+        logger.info("Output Tar File Full Path: {}", file.getAbsoluteFile());
 
         StringBuffer   result    = new StringBuffer();
         Process        process   = null;
@@ -1271,7 +1124,6 @@ public class DisplayController
             }
             catch (IOException e)
             {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
 
@@ -1282,8 +1134,6 @@ public class DisplayController
             }
 
         }
-
-        // System.out.println("result is: " + result);
 
         return file;
     }
