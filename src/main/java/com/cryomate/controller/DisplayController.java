@@ -37,10 +37,8 @@ public class DisplayController
 {
     private FileUtils fu = new FileUtils();
     private static final Logger logger  = LoggerFactory.getLogger(DisplayController.class);
-    
     @Value("${cryomate.data.tmpdir}")
     private String tmpDirPrefix;
-    
     @RequestMapping("/api/cDisp_Stack")
     @ResponseBody    
     public String cDisplayStack(HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -388,9 +386,9 @@ public class DisplayController
         String command[] = new String[paraItems.length + 1 + 2];
         command[0] = "warehouse/bin/cDisp_3DMap";
         int beginIndex = pFilename.lastIndexOf('/') + 1;
-        String fileName = pFilename.substring(beginIndex);
+        String prefixStr = pFilename.substring(beginIndex);
         command[1] = "--prefix";
-        command[2] = fileName + "@";
+        command[2] = prefixStr + "@";
         for (int i = 0; i < paraItems.length; i++)
         {
             command[i + 3] = paraItems[i].trim();
@@ -417,84 +415,6 @@ public class DisplayController
 
         return null;
     }
-    
-    @RequestMapping("/api/cDisp_3DMap2")
-    @ResponseBody   
-    public String cDisplay3DMap2(HttpServletRequest request, HttpServletResponse response) throws IOException
-    {
-        String pFilename   = request.getParameter("pFilename");
-        String sNormalized = request.getParameter("sNormalized");
-        String pMean       = request.getParameter("pMean");
-        String pStd        = request.getParameter("pSTD");
-        String sRAW        = request.getParameter("sRAW");
-        String sMRC        = request.getParameter("sMRC");
-        String sJPEG       = request.getParameter("sJPEG");
-        String pAxis       = request.getParameter("pAxis");
-        String pSlice      = request.getParameter("pSlice");
-        
-        String ret = checkCommonParameter(request, pFilename, sNormalized, sRAW, sMRC, sJPEG);
-        if(ret != null)
-        {
-            return ret;
-        }
-        String outputDir = Generators.timeBasedGenerator().generate().toString();
-        String loginUserName = getLoginUserName(request);
-        String outputDirFullPath = this.tmpDirPrefix + 
-                           File.separatorChar + 
-                           loginUserName + 
-                           File.separatorChar + 
-                           outputDir;
-        
-        String argumentString = "--input " + pFilename;
-        argumentString = genArgumentString(argumentString, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath);
-        if(pAxis == null)
-        {
-            pAxis = "z";            
-        }
-        if(pSlice == null)
-        {
-            pSlice = "0";
-        }
-        argumentString = argumentString + " --pAxis " + pAxis + " --pSlice " + pSlice;
-        logger.info("Argument String = {}\n", argumentString);
-
-        String paraItems[] = argumentString.split(" ");
-        System.out.println("length of paraItems: " + paraItems.length);
-        //1:program name
-        //2:prefix and prefix value
-        String command[] = new String[paraItems.length + 1 + 2];
-        command[0] = "warehouse/bin/cDisp_3DMap";
-        int beginIndex = pFilename.lastIndexOf('/') + 1;
-        String fileName = pFilename.substring(beginIndex);
-        command[1] = "--prefix";
-        command[2] = fileName + "@";
-        for (int i = 0; i < paraItems.length; i++)
-        {
-            command[i + 3] = paraItems[i].trim();
-        }
-
-        System.out.println("====>Command to be executed:");
-        for (String item : command)
-        {
-            System.out.print(item + " ");
-        }
-        System.out.println("");
-
-        //run command
-        String result = CommandRunner.runCommand(command);
-        if (result.length() != 0)
-        {
-            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: Failed to generate Image [ detail:  " + result + " ]";
-        }
-        //compress directory
-        File tarFile = compressImageDir(outputDirFullPath, outputDir, outputDirFullPath + ".tar");
-        logger.info("Tar File Full Path: {}", tarFile.getAbsoluteFile());
-        //transfer tar file to client
-        transferToClient(response, tarFile);
-
-        return null;
-    }
-
     
     
     private String checkMultiDisplyParameter(HttpServletRequest request, 
@@ -619,14 +539,14 @@ public class DisplayController
          * 2. Construct input arguments for program mrcs2jpeg based on input parameter
          * 3. List directory pPath with filter string in parameter pFileFilter
          * 4. pAll = -1: generate jpeg | raw | mrc file from *_Final.mrc or last mrc file
-         *               Write following message to rtn_string.txt
+         *               Write following message to FilterMatch.txt
          *                  filter string1: file list
          *                  filename1:file content line by line separated by;
          *    pAll = 1: generate jpeg | raw | mrc file from all listed mrc file
-         *              Write following message to rtn_string.txt
+         *              Write following message to FilterMatch.txt
          *                  filter string1: file list
          *                  filename1:file content line by line separated by;
-         *    pAll = 0: only gen rtn_string.txt with content:
+         *    pAll = 0: only gen FilterMatch.txt with content:
          *                  filter string1: file list
          *                  filter string2: file list
          * 
@@ -674,13 +594,13 @@ public class DisplayController
         }
         
         
-        //Generate unique output directory
         String argumentString = "";
         if(program.contentEquals(Constant.MAP_PROGRAM))
         {
             argumentString="--pAxis " + pAxis + " --pSlice " + pSlice;
         }
         
+        //Generate unique output directory
         String loginUserName = getLoginUserName(request);
         String outputDir = Generators.timeBasedGenerator().generate().toString();
         String outputDirFullPath = this.tmpDirPrefix + File.separatorChar + loginUserName + File.separatorChar + outputDir;
@@ -721,7 +641,7 @@ public class DisplayController
                 logger.info("Gen jpeg|mrc|raw complete, return msg: {}", result);
             }
             
-            String outputFileNameFullPath = outputDirFullPath + File.separatorChar + "rtn_string.txt";
+            String outputFileNameFullPath = outputDirFullPath + File.separatorChar + "FilterMatch.txt";
             writeFilterFileList(outputFileNameFullPath, filters, fileLists);
             //Generate text return file
             for(int i = 1; i < fileLists.length; i ++)
@@ -731,7 +651,7 @@ public class DisplayController
                 {
                     Vector<String> textFiles = getTextFiles(pPath, fileLists[i]);
                     logger.info("Those text files will be used to generate return text message: {}", textFiles);
-                    genTextDataToFiles(textFiles, outputFileNameFullPath);
+                    genTextDataToFiles(textFiles, outputDirFullPath);
                 }                
             }
             //Compress output dir
@@ -757,7 +677,7 @@ public class DisplayController
                 
             }
             
-            String outputFileNameFullPath = outputDirFullPath + File.separatorChar + "rtn_string.txt";
+            String outputFileNameFullPath = outputDirFullPath + File.separatorChar + "FilterMatch.txt";
             writeFilterFileList(outputFileNameFullPath, filters, fileLists);
             //Generate text return file
             for(int i = 1; i < fileLists.length; i ++)
@@ -773,7 +693,7 @@ public class DisplayController
                         textFiles.add(parentPath + (String)fileLists[i].get(j));
                     }
                     logger.info("Those text files will be used to generate return text message: {}", textFiles);
-                    genTextDataToFiles(textFiles, outputFileNameFullPath);
+                    genTextDataToFiles(textFiles, outputDirFullPath);
                 }                
             }
             //Compress output dir
@@ -784,7 +704,7 @@ public class DisplayController
         }
         else if(pAll.contentEquals("0"))
         {
-            String outputFileNameFullPath = outputDirFullPath + File.separatorChar + "rtn_string.txt";
+            String outputFileNameFullPath = outputDirFullPath + File.separatorChar + "FilterMatch.txt";
             File f = new File(outputDirFullPath);
             if(!f.exists())
             {
@@ -919,10 +839,8 @@ public class DisplayController
         String result = "";
         for(String f: fileToBeGenData)
         {
-            int a = f.lastIndexOf('/') + 1;
-            int b = f.lastIndexOf(".mrc");
-            String prefix = f.substring(a,b) + "_";
-            
+            int beginIndex = f.lastIndexOf('/') + 1;
+            String prefixValue = f.substring(beginIndex) + "@";
             String paraItems[] = argumentString.split(" ");
             //1:program name
             //2: --input value
@@ -944,14 +862,13 @@ public class DisplayController
             cnt ++;
             
             command[5] = "--prefix";
-            command[6] = prefix;
+            command[6] = prefixValue;
             logger.info("Program: {}, Argument String : {} {} {} {} {} {} {} ", command[0], command[1], command[2], command[3], command[4], command[5], command[6], argumentString);
             for (int i = 0; i < paraItems.length; i++)
             {
                 command[i + 7] = paraItems[i].trim();
             }
             result = result + CommandRunner.runCommand(command);
-            
         }
         
         return result;
@@ -965,11 +882,23 @@ public class DisplayController
         for(int i = 0; i < filters.length; i ++)
         {            
             strFileList.append(filters[i] + ":");
-            for(int j = 0; j < fileLists[i].size(); j ++)
+            int fileNum = fileLists[i].size();
+            for(int j = 0; j < fileNum - 1; j ++)
             {
                 strFileList.append(fileLists[i].get(j) + ";");                
             }
+            //append last file without adding separator ";"
+            if(fileNum > 0)
+            {
+                strFileList.append(fileLists[i].get(fileNum - 1));
+            }
             strFileList.append("\n");
+        }
+        
+        int endIndex = strFileList.length() - 1;
+        if(strFileList.charAt(endIndex) == '\n')
+        {
+            strFileList.deleteCharAt(endIndex);
         }
         bw.write(strFileList.toString());
         bw.close();
@@ -977,7 +906,43 @@ public class DisplayController
     }
 
     @SuppressWarnings("rawtypes")
-    public void genTextDataToFiles(Vector<String> fileNames, String outputFileNameFullPath) throws IOException
+    public void genTextDataToFiles(Vector<String> fileNames, String outputDir) throws IOException
+    {
+        for(String fileName: fileNames)
+        {
+            StringBuffer sb = new StringBuffer();
+            FileReader fr = new FileReader(fileName);
+            BufferedReader br = new BufferedReader(fr);
+            String line = br.readLine();
+            while(line != null)
+            {               
+                sb.append(line + ";");
+                line = br.readLine();
+            }
+            
+            br.close();
+            fr.close();
+            
+            //remove last ';'
+            int endIndex = sb.length() - 1;
+            if(endIndex >= 0 && sb.charAt(endIndex) == ';')
+            {
+                sb.deleteCharAt(endIndex);
+            }
+            
+            int beginIndex = fileName.lastIndexOf('/') + 1;
+            String outputFileNameFullPath = outputDir + File.separatorChar + fileName.substring(beginIndex);
+            FileWriter fw = new FileWriter(outputFileNameFullPath);
+            BufferedWriter bw = new BufferedWriter(fw);        
+            bw.write(sb.toString());
+            bw.close();
+            fw.close();            
+        }
+        
+    
+    }
+    @SuppressWarnings("rawtypes")
+    public void genTextDataToFilesPrevious(Vector<String> fileNames, String outputFileNameFullPath) throws IOException
     {
         StringBuffer sb = new StringBuffer();
         for(String fileName: fileNames)
@@ -1046,9 +1011,9 @@ public class DisplayController
         command[0] = "warehouse/bin/mrcs2jpeg";
         //construct prefix value 'filename@'
         int a = pFilename.lastIndexOf('/') + 1;
-        String fileName = pFilename.substring(a);
+        String prefixStr = pFilename.substring(a);
         command[1] = "--prefix";
-        command[2] = fileName + "@";
+        command[2] = prefixStr + "@";
         
         for (int i = 0; i < paraItems.length; i++)
         {
