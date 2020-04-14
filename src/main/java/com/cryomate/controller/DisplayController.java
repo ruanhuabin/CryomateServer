@@ -1110,6 +1110,9 @@ public class DisplayController
         {
             response.setContentType("application/force-download");// 设置强制下载不打开
             response.addHeader("Content-Disposition", "attachment;fileName=" + tarFile.getName());// 设置文件名
+            int contentLength = (int)tarFile.length();
+            logger.info("Length of Tar File [{}]: {}", tarFile.getName(), contentLength);
+            response.setContentLength(contentLength);
             byte[]              buffer = new byte[1024];
             FileInputStream     fis    = null;
             BufferedInputStream bis    = null;

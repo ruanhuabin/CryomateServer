@@ -7,3 +7,6 @@ target
 warehouse/imageDir
 logs
 nohup.out
+warehouse/program/epeg
+warehouse/program/epeg-src
+warehouse/program/libexif*
