@@ -43,14 +43,14 @@ public class DisplayController
     @ResponseBody    
     public String cDisplayStack(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
-        return display(request, response);
+        return display(request, response, Constant.STACK_PROGRAM);
     }
     
     @RequestMapping("/api/cDisp_Image")
     @ResponseBody    
     public String cDisplayImage(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
-        return display(request, response);
+        return display(request, response, Constant.IMAGE_PROGRAM);
     }
     
     @RequestMapping("/api/cDisp_FSC")
@@ -341,6 +341,8 @@ public class DisplayController
     @ResponseBody   
     public String cDisplay3DMap(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
+        return display(request, response, Constant.MAP_PROGRAM);
+        /*
         String pFilename   = request.getParameter("pFilename");
         String sNormalized = request.getParameter("sNormalized");
         String pMean       = request.getParameter("pMean");
@@ -414,6 +416,7 @@ public class DisplayController
         transferToClient(response, tarFile);
 
         return null;
+        */
     }
     
     
@@ -980,15 +983,21 @@ public class DisplayController
         fw.close();
     }
 
-    private String display(HttpServletRequest request, HttpServletResponse response) throws IOException
+    private String display(HttpServletRequest request, HttpServletResponse response, String program) throws IOException
     {
-        String pFilename = request.getParameter("pFilename");        
+        String pFilename   = request.getParameter("pFilename");
         String sNormalized = request.getParameter("sNormalized");
         String pMean       = request.getParameter("pMean");
         String pStd        = request.getParameter("pSTD");
         String sRAW        = request.getParameter("sRAW");
         String sMRC        = request.getParameter("sMRC");
         String sJPEG       = request.getParameter("sJPEG");
+        String pAxis       = request.getParameter("pAxis");
+        String pSlice      = request.getParameter("pSlice");
+
+        String pScale = request.getParameter("pScale");
+        String pMaxDimension = request.getParameter("pMaxDimension");
+        String pJPEGQuality = request.getParameter("pJPEGQuality");
 
         String ret = checkCommonParameter(request, pFilename, sNormalized, sRAW, sMRC, sJPEG);  
         if(ret != null)
@@ -1002,13 +1011,28 @@ public class DisplayController
 
         String argumentString = "--input " + pFilename;
         argumentString = genArgumentString(argumentString, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath);
+        if(pAxis == null)
+        {
+            pAxis = "z";            
+        }
+        if(pSlice == null)
+        {
+            pSlice = "0";
+        }
+        
+        if(program.contentEquals(Constant.MAP_PROGRAM))
+        {
+            argumentString = argumentString + " --pAxis " + pAxis + " --pSlice " + pSlice;
+        }
+
+        logger.info("Argument String = {}\n", argumentString);
         logger.info("Return value of genArgumentString() = {}", argumentString);
 
         String paraItems[] = argumentString.split(" ");
         //1:store program name
         //2:store prefix argument, prefix value is based on input file name
         String command[] = new String[paraItems.length + 1 + 2];
-        command[0] = "warehouse/bin/mrcs2jpeg";
+        command[0] = program;
         //construct prefix value 'filename@'
         int a = pFilename.lastIndexOf('/') + 1;
         String prefixStr = pFilename.substring(a);
