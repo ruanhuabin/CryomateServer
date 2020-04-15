@@ -428,9 +428,11 @@ public class DisplayController
                                             String sRAW, 
                                             String sMRC, 
                                             String sJPEG, 
-                                            String pFileFilter) throws IOException
+                                            String pFileFilter,
+                                            String pScale,
+                                            String pMaxDimension) throws IOException
     {
-        String ret = checkCommonParameter(request, dirOrFile, sNormalized, sRAW, sMRC, sJPEG);  
+        String ret = checkCommonParameter(request, dirOrFile, sNormalized, sRAW, sMRC, sJPEG, pScale, pMaxDimension);  
         if(ret != null)
         {
             return ret;
@@ -445,7 +447,7 @@ public class DisplayController
     }
 
     private String checkCommonParameter(HttpServletRequest request, String dirOrFile, String sNormalized, String sRAW, String sMRC,
-            String sJPEG) throws IOException
+            String sJPEG, String pScale, String pMaxDimension) throws IOException
     {
         if (dirOrFile == "" || dirOrFile == null)
         {
@@ -505,6 +507,14 @@ public class DisplayController
         {
             return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: sMRC or sRAW should go with sNormalized";
         }
+        
+        if(pScale != null && pMaxDimension != null)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX
+                    + "Error: Parameter  pScale, pMaxDimension should not set simultaneously";
+        }
+        
+        
 
         return null;
     }
@@ -555,19 +565,22 @@ public class DisplayController
          * 
          *    
          */
-        String pPath       = request.getParameter("pPath");
-        String pFileFilter = request.getParameter("pFileFilter");
-        String pAll        = request.getParameter("pAll");
-        String sNormalized = request.getParameter("sNormalized");
-        String pMean       = request.getParameter("pMean");
-        String pStd        = request.getParameter("pSTD");
-        String sRAW        = request.getParameter("sRAW");
-        String sMRC        = request.getParameter("sMRC");
-        String sJPEG       = request.getParameter("sJPEG");
-        String pSlice      = request.getParameter("pSlice");
-        String pAxis       = request.getParameter("pAxis");
+        String pPath         = request.getParameter("pPath");
+        String pFileFilter   = request.getParameter("pFileFilter");
+        String pAll          = request.getParameter("pAll");
+        String sNormalized   = request.getParameter("sNormalized");
+        String pMean         = request.getParameter("pMean");
+        String pStd          = request.getParameter("pSTD");
+        String sRAW          = request.getParameter("sRAW");
+        String sMRC          = request.getParameter("sMRC");
+        String sJPEG         = request.getParameter("sJPEG");
+        String pSlice        = request.getParameter("pSlice");
+        String pAxis         = request.getParameter("pAxis");
+        String pScale        = request.getParameter("pScale");
+        String pMaxDimension = request.getParameter("pMaxDimension");
+        String pJPEGQuality  = request.getParameter("pJPEGQuality");
         
-        String ret = checkMultiDisplyParameter(request, pPath, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, pFileFilter);
+        String ret = checkMultiDisplyParameter(request, pPath, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, pFileFilter, pScale, pMaxDimension);
         if(ret != null)
         {
             return ret;
@@ -609,7 +622,7 @@ public class DisplayController
         String outputDirFullPath = this.tmpDirPrefix + File.separatorChar + loginUserName + File.separatorChar + outputDir;
         if(!pAll.contentEquals("0"))
         {   
-            argumentString = genArgumentString(argumentString, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath);            
+            argumentString = genArgumentString(argumentString, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath, pScale, pMaxDimension, pJPEGQuality);            
         }
         //List directory
         String[] filters = pFileFilter.split(";");
@@ -728,7 +741,7 @@ public class DisplayController
     }
 
     private String genArgumentString(String currArgumentString, String sNormalized, String pMean, String pStd, String sRAW, String sMRC,
-            String sJPEG, String outputDirFullPath)
+            String sJPEG, String outputDirFullPath, String pScale, String pMaxDimension, String pJPEGQuality)
     {
         
         currArgumentString = currArgumentString + " --output " + outputDirFullPath;
@@ -784,7 +797,31 @@ public class DisplayController
         {
             currArgumentString = currArgumentString + " --pMean 0";
         }
+        
+        if(pJPEGQuality != null)
+        {
+            currArgumentString = currArgumentString + " --pJPEGQuality " + pJPEGQuality;
+        }
+        else
+        {
+            currArgumentString = currArgumentString + " --pJPEGQuality 90";
+        }
 
+        if(pMaxDimension != null && pMaxDimension != "")
+        {
+            currArgumentString = currArgumentString + " --pMaxDimension " + pMaxDimension;
+        }
+        else
+        {
+            if(pScale == null)
+            {
+                currArgumentString = currArgumentString + " --pScale 1.0";
+            }
+            else
+            {
+                currArgumentString = currArgumentString + " --pScale " + pScale;
+            }        
+        }
         return currArgumentString;
     }
 
@@ -999,7 +1036,7 @@ public class DisplayController
         String pMaxDimension = request.getParameter("pMaxDimension");
         String pJPEGQuality = request.getParameter("pJPEGQuality");
 
-        String ret = checkCommonParameter(request, pFilename, sNormalized, sRAW, sMRC, sJPEG);  
+        String ret = checkCommonParameter(request, pFilename, sNormalized, sRAW, sMRC, sJPEG, pScale, pMaxDimension);  
         if(ret != null)
         {
             return ret;
@@ -1010,21 +1047,28 @@ public class DisplayController
                                    loginUserName + File.separatorChar + outputDir;
 
         String argumentString = "--input " + pFilename;
-        argumentString = genArgumentString(argumentString, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath);
-        if(pAxis == null)
+        argumentString = genArgumentString(argumentString, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath, pScale, pMaxDimension, pJPEGQuality);
+        if(pAxis == null || pAxis == "")
         {
             pAxis = "z";            
         }
-        if(pSlice == null)
+        if(pSlice == null || pSlice == "")
         {
             pSlice = "0";
         }
+        
+        
+        
+        
+            
         
         if(program.contentEquals(Constant.MAP_PROGRAM))
         {
             argumentString = argumentString + " --pAxis " + pAxis + " --pSlice " + pSlice;
         }
 
+        
+        
         logger.info("Argument String = {}\n", argumentString);
         logger.info("Return value of genArgumentString() = {}", argumentString);
 
