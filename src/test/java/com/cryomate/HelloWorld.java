@@ -3,10 +3,19 @@ package com.cryomate;
 import java.io.*;
 import java.nio.*;
 import java.util.*;
+import java.util.Map.Entry;
+
+import org.apache.commons.io.filefilter.WildcardFileFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.cryomate.utils.FileUtils;
 
 public class HelloWorld
 {
 
+    private static final Logger logger = LoggerFactory
+            .getLogger(HelloWorld.class);
     public void name()
     {
 
@@ -238,10 +247,73 @@ public class HelloWorld
         fw.close();
     }
     
+    private String getFilterString(String inputFilterString)
+    {
+        int a = inputFilterString.indexOf('@') + 1;
+        String finalFilterStr = inputFilterString.substring(a);
+        
+        return finalFilterStr;
+    }
+    
+    @SuppressWarnings("rawtypes")
+    public HashMap<String, Vector<String>> listDir2(String pPath, String[] filters)
+    {
+        File dir = new File(pPath);
+        //Vector[] fileLists = new Vector[filters.length];      
+        HashMap<String, Vector<String>> filter2Files = new HashMap<String, Vector<String>>();
+        for(int i = 0; i < filters.length; i ++)
+        {
+            Vector<String> fileList = new Vector<String>();
+            //fileLists[i] = new Vector();
+            String filterString = getFilterString(filters[i]);
+            FileFilter fileFilter = new WildcardFileFilter(filterString);
+            File[] files = dir.listFiles(fileFilter);
+            for (int j = 0; j < files.length; j++) 
+            {
+                fileList.add(files[j].getName());
+            }
+            logger.info("InputFilter = [{}], Actual Filter [{}]  -->: {}", filters[i], filterString, fileList);
+            fileList.sort(null);
+            filter2Files.put(filters[i], fileList);
+            
+        }
+        
+        return filter2Files;
+    }
+    
 
     public static void main(String[] args) throws IOException
     {
-        HashMap<String, String> argumentString = new HashMap<String, String>();
+
+        HelloWorld hw = new HelloWorld();
+        String pPath = "/Share/TestData/C2D_001/";
+        String[] filters = new String[2];
+        filters[0] = "TXT@*.txt";
+        filters[1] = "MRC@*.mrcs";
+        HashMap<String, Vector<String>> filterFiles = hw.listDir2(pPath, filters);
+        //System.out.println(filterFiles.get(filters[0]));
+        //System.out.println(filterFiles);
+        
+        for(Entry<String, Vector<String>> e: filterFiles.entrySet())
+        {
+            if(e.getKey().startsWith("TXT@"))
+            {
+                System.out.println("TXT: " + e.getValue());
+            }
+            else if(e.getKey().startsWith("MRC@"))
+            {
+                System.out.println("MRC:" + e.getValue());
+            }
+        }
+        
+        
+        
+        //filter
+        
+        
+        
+        
+        
 
     }
 

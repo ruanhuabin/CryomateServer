@@ -19,6 +19,7 @@ import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
@@ -84,6 +85,41 @@ public class FileUtils
         
         return fileLists;
 	}
+	
+	private String getFilterString(String inputFilterString)
+	{
+	    int a = inputFilterString.indexOf('@') + 1;
+	    String finalFilterStr = inputFilterString.substring(a);
+	    
+	    return finalFilterStr;
+	}
+	
+	@SuppressWarnings("rawtypes")
+    public HashMap<String, Vector<String>> listDir2(String pPath, String[] filters)
+    {
+	    File dir = new File(pPath);
+        //Vector[] fileLists = new Vector[filters.length];      
+        HashMap<String, Vector<String>> filter2Files = new HashMap<String, Vector<String>>();
+        for(int i = 0; i < filters.length; i ++)
+        {
+            Vector<String> fileList = new Vector<String>();
+            //fileLists[i] = new Vector();
+            String filterString = getFilterString(filters[i]);
+            FileFilter fileFilter = new WildcardFileFilter(filterString);
+            File[] files = dir.listFiles(fileFilter);
+            for (int j = 0; j < files.length; j++) 
+            {
+                fileList.add(files[j].getName());
+            }
+            logger.info("InputFilter = [{}], Actual Filter [{}]  -->: {}", filters[i], filterString, fileList);
+            fileList.sort(null);
+            filter2Files.put(filters[i], fileList);
+            
+        }
+        
+        return filter2Files;
+        
+    }
 	
 	public int changeFileOwnerGroup(String fileFullName, String owner, String group) throws IOException
 	{

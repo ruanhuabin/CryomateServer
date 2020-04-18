@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
@@ -523,7 +524,7 @@ public class DisplayController
     @ResponseBody   
     public String cDispMultiStack(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
-        return multiDisplay(request, response, Constant.STACK_PROGRAM);
+        return multiDisplay2(request, response, Constant.STACK_PROGRAM);
         
     }
     
@@ -531,7 +532,7 @@ public class DisplayController
     @ResponseBody   
     public String cDispMultiImage(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
-        return multiDisplay(request, response, Constant.IMAGE_PROGRAM);
+        return multiDisplay2(request, response, Constant.IMAGE_PROGRAM);
         
     }
     
@@ -539,10 +540,303 @@ public class DisplayController
     @ResponseBody   
     public String cDispMulti3DMap(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
-        return multiDisplay(request, response, Constant.MAP_PROGRAM);
+        return multiDisplay2(request, response, Constant.MAP_PROGRAM);
         
     }
     
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private String multiDisplay2(HttpServletRequest request, HttpServletResponse response, String program) throws IOException
+    {
+        /*
+         * Process Logic:
+         * 1. Valid parameter
+         * 2. Construct input arguments for program mrcs2jpeg based on input parameter
+         * 3. List directory pPath with filter string in parameter pFileFilter
+         * 4. pAll = -1: generate jpeg | raw | mrc file from *_Final.mrc or last mrc file
+         *               Write following message to FilterMatch.txt
+         *                  filter string1: file list
+         *                  filename1:file content line by line separated by;
+         *    pAll = 1: generate jpeg | raw | mrc file from all listed mrc file
+         *              Write following message to FilterMatch.txt
+         *                  filter string1: file list
+         *                  filename1:file content line by line separated by;
+         *    pAll = 0: only gen FilterMatch.txt with content:
+         *                  filter string1: file list
+         *                  filter string2: file list
+         * 
+         *    
+         */
+        String pPath         = request.getParameter("pPath");
+        String pFileFilter   = request.getParameter("pFileFilter");
+        String pAll          = request.getParameter("pAll");
+        String sNormalized   = request.getParameter("sNormalized");
+        String pMean         = request.getParameter("pMean");
+        String pStd          = request.getParameter("pSTD");
+        String sRAW          = request.getParameter("sRAW");
+        String sMRC          = request.getParameter("sMRC");
+        String sJPEG         = request.getParameter("sJPEG");
+        String pSlice        = request.getParameter("pSlice");
+        String pAxis         = request.getParameter("pAxis");
+        String pScale        = request.getParameter("pScale");
+        String pMaxDimension = request.getParameter("pMaxDimension");
+        String pJPEGQuality  = request.getParameter("pJPEGQuality");
+        
+        if(pFileFilter.matches("^TXT@.*\\*.*;MRC@.*\\*.*") != true && pFileFilter.matches("^MRC@.*\\\\*.*;TXT@.*\\\\*.*") != true)
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + " Error: pFileFilter string format is not correct, it should be like TXT@xxx*xxx;MRC@xxx*xxx";
+        }
+        
+        String ret = checkMultiDisplyParameter(request, pPath, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, pFileFilter, pScale, pMaxDimension);
+        if(ret != null)
+        {
+            return ret;
+        } 
+        if(pAll == null || pAll == "")
+        {
+            pAll = "-1";
+        }
+        
+        if(!pAll.equals("-1") && !pAll.equals("1") && ! pAll.equals("0"))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pAll value should be -1, 0, or 1";
+        }
+        
+        if(pAxis == null || pAxis == "")
+        {
+            pAxis = "z";
+        }
+        if(!pAxis.equals("z") && !pAxis.equals("y") && ! pAxis.equals("x"))
+        {
+            return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + "Error: pAxis value should be x, y, or z";
+        }
+        
+        if(pSlice == null || pSlice == "")
+        {
+            pSlice = "0";
+        }
+        
+        
+        String argumentString = "";
+        if(program.contentEquals(Constant.MAP_PROGRAM))
+        {
+            argumentString="--pAxis " + pAxis + " --pSlice " + pSlice;
+        }
+        
+        //Generate unique output directory
+        String loginUserName = getLoginUserName(request);
+        String outputDir = Generators.timeBasedGenerator().generate().toString();
+        String outputDirFullPath = this.tmpDirPrefix + File.separatorChar + loginUserName + File.separatorChar + outputDir;
+        if(!pAll.contentEquals("0"))
+        {   
+            argumentString = genArgumentString(argumentString, sNormalized, pMean, pStd, sRAW, sMRC, sJPEG, outputDirFullPath, pScale, pMaxDimension, pJPEGQuality);            
+        }
+        
+        //List directory
+        String[] filters = pFileFilter.split(";");
+        for(int i = 0; i < filters.length; i ++)
+        {
+            logger.debug("filter string [{}] : {}", i, filters[i]);
+        }
+        
+        
+        
+        HashMap<String, Vector<String>> filter2FilesMap = fu.listDir2(pPath, filters);
+        //Construct file list as string
+        StringBuffer sbFileList = new StringBuffer();        
+        for(Entry<String, Vector<String>> e: filter2FilesMap.entrySet())
+        {
+            sbFileList.append(e.getKey() + ":");
+            Vector<String> fileNames = e.getValue();
+            for(int j = 0; j < fileNames.size() - 1; j ++)
+            {
+                sbFileList.append(fileNames.get(j) + ";");
+            }
+            if(fileNames.size() > 0)
+            {
+                sbFileList.append(fileNames.get(fileNames.size() - 1) + "\n");
+            }
+            else
+            {
+                sbFileList.append("\n");
+            }
+        }
+       
+        Vector filter2Files[] = new Vector[2];
+        for(int i = 0; i < 2; i ++)
+        {
+            if(filters[i].startsWith("TXT@"))
+            {
+                filter2Files[0] = filter2FilesMap.get(filters[i]);
+            }
+            else
+            {
+                filter2Files[1] = filter2FilesMap.get(filters[i]);
+            }
+        }
+        
+        if(pAll.contentEquals("-1"))
+        {
+            //We suppose mrc files are in fileList[0], other text file are in fileLists[1...N]
+            if(filter2Files[1].size() > 0)
+            {
+                Vector<String> mrcFiles = new Vector<String>();
+                String patternStr = getPattern(filters, filter2Files[0]);
+                if(patternStr == null)
+                {
+                    return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + " Error: no pattern string is found";
+                }
+                getMRCFiles2(mrcFiles, pPath, filter2Files[1], patternStr);
+                logger.info("Those mrc files will be used to generate jpeg/mrc/raw: {}", mrcFiles);
+                String result = genBinaryData(mrcFiles, argumentString, program);
+                logger.info("Gen jpeg|mrc|raw complete, return msg: {}", result);
+            }
+            
+            String outputFileNameFullPath = outputDirFullPath + File.separatorChar + "FilterMatch.txt";
+            writeFilterFileList(outputFileNameFullPath, filters, filter2Files);
+            //Generate text return file
+            //for(int i = 1; i < filter2Files.length; i ++)
+            //{
+                logger.info("Text fileLists[{}] = {}", 0, filter2Files[0]);
+                if(filter2Files[0].size() > 0)
+                {
+                    Vector<String> textFiles = getTextFiles(pPath, filter2Files[0]);
+                    logger.info("Those text files will be used to generate return text message: {}", textFiles);
+                    genTextDataToFiles(textFiles, outputDirFullPath);
+                }                
+            //}
+            //Compress output dir
+            String outputTarFileName = outputDirFullPath + ".tar";
+            File tarFile = compressImageDir(outputDirFullPath, outputDir, outputTarFileName);
+            //Transfer compressed output dir to client
+            transferToClient(response, tarFile);
+        }
+        else if(pAll.contentEquals("1"))
+        {
+            if(filter2Files[1].size() > 0)
+            { 
+                Vector<String> mrcFiles = new Vector<String>();
+                for(Object f: filter2Files[1])
+                {
+                    String fileName = (String)f;                    
+                    fileName = pPath + File.separatorChar + fileName;
+                    mrcFiles.add(fileName);                   
+                }
+                logger.info("Those mrc files will be used to generate jpeg/mrc/raw: {}", mrcFiles);
+                String result = genBinaryData(mrcFiles, argumentString, program);
+                logger.info("Gen jpeg|mrc|raw complete, return msg: {}", result);
+                
+            }
+            
+            String outputFileNameFullPath = outputDirFullPath + File.separatorChar + "FilterMatch.txt";
+            writeFilterFileList(outputFileNameFullPath, filters, filter2Files);
+            //Generate text return file
+            //for(int i = 1; i < filter2Files.length; i ++)
+            //{
+                logger.info("Text fileLists[{}] = {}", 0, filter2Files[0]);
+                if(filter2Files[0].size() > 0)
+                {
+                    Vector<String> textFiles = new Vector<String>();
+                    //getTextFiles(textFiles, pPath, fileLists[i]);
+                    String parentPath = pPath + File.separatorChar;
+                    for(int j = 0; j < filter2Files[0].size(); j ++)
+                    {
+                        textFiles.add(parentPath + (String)filter2Files[0].get(j));
+                    }
+                    logger.info("Those text files will be used to generate return text message: {}", textFiles);
+                    genTextDataToFiles(textFiles, outputDirFullPath);
+                }                
+            //}
+            //Compress output dir
+            String outputTarFileName = outputDirFullPath + ".tar";
+            File tarFile = compressImageDir(outputDirFullPath, outputDir, outputTarFileName);
+            //Transfer compressed output dir to client
+            transferToClient(response, tarFile);
+        }
+        else if(pAll.contentEquals("0"))
+        {
+            String outputFileNameFullPath = outputDirFullPath + File.separatorChar + "FilterMatch.txt";
+            File f = new File(outputDirFullPath);
+            if(!f.exists())
+            {
+                boolean isSuccess = f.mkdirs();
+                if(!isSuccess)
+                {
+                    return Constant.HTTP_RTN_STATUS_RESULT_PREFIX + " Error: Create dir [ " + outputDir + " ] failed, maybe permission denied.";
+                }
+            }
+            writeFilterFileList(outputFileNameFullPath, filters, filter2Files);
+            //Compress output dir
+            String outputTarFileName = outputDirFullPath + ".tar";
+            File tarFile = compressImageDir(outputDirFullPath, outputDir, outputTarFileName);
+            //Transfer compressed output dir to client
+            transferToClient(response, tarFile);
+        }
+        return null;
+    }
+    
+    private void getMRCFiles2(Vector<String> mrcFiles, String pPath, Vector fileList, String patternStr)
+    {
+        // TODO Auto-generated method stub
+        for(int i = 0; i < fileList.size(); i ++)
+        {
+            String fileName = (String)fileList.get(i);
+            if(fileName.contains(patternStr))
+            {
+                mrcFiles.add(pPath + File.separatorChar + fileName);
+            }            
+        }        
+    }
+
+    private String getTextFileName(Vector fileNames)
+    {
+        String fileName = null;
+        
+        boolean isFinalExist = false;
+        for(Object f: fileNames)
+        {
+            fileName = (String)f;
+            if(fileName.contains("_Final"))
+            {                
+                isFinalExist = true;
+                break;
+            }
+        }
+        
+        if(!isFinalExist && fileNames.size() > 0)
+        {
+            fileName =  (String)fileNames.get(fileNames.size() - 1);
+        } 
+        
+        return fileName;
+    }
+    private String getPattern(String[] filters, Vector filter2Files)
+    {
+        // TODO Auto-generated method stub
+        String patternStr = null;
+        for(int i = 0; i < filters.length; i ++)
+        {
+            if(filters[i].startsWith("TXT@"))
+            {
+                String fileName = getTextFileName(filter2Files);
+                if(fileName == null)
+                {
+                    break;
+                }
+                int a = filters[i].indexOf('@') + 1;
+                String actualFilter = filters[i].substring(a);
+                int b = actualFilter.indexOf('*');
+                String prefix = actualFilter.substring(0,b);
+                String suffix = actualFilter.substring(b + 1);
+                int lenPrefix = prefix.length();
+                int c = fileName.indexOf(suffix);
+                patternStr = fileName.substring(lenPrefix, c);
+                        
+                break;
+            }
+        }
+        return patternStr;
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     private String multiDisplay(HttpServletRequest request, HttpServletResponse response, String program) throws IOException
     {
